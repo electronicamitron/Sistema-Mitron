@@ -7,8 +7,9 @@ import Catalog from './pages/Catalog';
 import Calendar from './pages/Calendar';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { type ReactNode } from 'react';
 
-function ProtectedRoute({ children }: { children: JSX.Element }) {
+function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
 
