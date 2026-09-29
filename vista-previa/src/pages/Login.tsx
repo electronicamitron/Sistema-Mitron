@@ -37,7 +37,8 @@ export default function Login() {
       justifyContent: 'center',
       padding: '16px',
       position: 'relative',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      boxSizing: 'border-box'
     }}>
       {/* Background decorations */}
       <div style={{
@@ -58,7 +59,8 @@ export default function Login() {
         padding: '32px',
         position: 'relative',
         zIndex: 10,
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+        boxSizing: 'border-box'
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '32px' }}>
           <div style={{
