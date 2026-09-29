@@ -1,11 +1,13 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, Package, List, Calendar as CalendarIcon, Bell, Settings, User } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Package, List, Calendar as CalendarIcon, Bell, Settings, User, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { NotificationPanel } from '../components/domain/NotificationPanel';
+import { useAuth } from '../context/AuthContext';
 
 export default function MainLayout() {
   const location = useLocation();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const { logout } = useAuth();
 
   const getPageTitle = () => {
     if (location.pathname.includes('dashboard')) return 'Dashboard';
@@ -56,6 +58,10 @@ export default function MainLayout() {
           <button className="mt-nav-item">
             <Settings size={16} />
             Ajustes
+          </button>
+          <button className="mt-nav-item" onClick={logout} style={{ color: '#F87171' }}>
+            <LogOut size={16} />
+            Cerrar Sesión
           </button>
           <div className="mt-user-card">
             <div className="mt-user-avatar"><User size={14} /></div>
