@@ -22,12 +22,8 @@ export default function MainLayout() {
     <div className="mt-app">
       <aside className="mt-sidebar">
         <div className="mt-nav-section">
-          <div className="mt-brand">
-            <div className="mt-brand-logo">M</div>
-            <div className="mt-brand-text">
-              <span className="mt-brand-title">MITRON</span>
-              <span className="mt-brand-tag">SISTEMA</span>
-            </div>
+          <div className="mt-brand" style={{ padding: '0 8px 16px', borderBottom: '1px solid var(--mt-border-subtle)', background: 'transparent' }}>
+            <img src="/logo2.png" alt="Mitron Logo" style={{ height: '60px', objectFit: 'contain', width: '100%' }} />
           </div>
           
           <div style={{ marginTop: '16px' }}>
@@ -42,6 +38,7 @@ export default function MainLayout() {
             <NavLink to="/inventory" className={({ isActive }) => `mt-nav-item ${isActive ? 'active' : ''}`}>
               <Package size={16} />
               Inventario
+              <span className="mt-badge warning" style={{ marginLeft: 'auto', padding: '2px 8px', borderRadius: '12px' }}>14</span>
             </NavLink>
             <NavLink to="/catalog" className={({ isActive }) => `mt-nav-item ${isActive ? 'active' : ''}`}>
               <List size={16} />
@@ -55,7 +52,7 @@ export default function MainLayout() {
         </div>
 
         <div className="mt-sidebar-bottom">
-          <button className="mt-nav-item">
+          <button className="mt-nav-item" onClick={() => alert('Ajustes no disponibles en esta demo')}>
             <Settings size={16} />
             Ajustes
           </button>
@@ -63,11 +60,11 @@ export default function MainLayout() {
             <LogOut size={16} />
             Cerrar Sesión
           </button>
-          <div className="mt-user-card">
-            <div className="mt-user-avatar"><User size={14} /></div>
+          <div className="mt-user-card" style={{ backgroundColor: 'var(--mt-surface)', borderColor: 'var(--mt-border-subtle)' }}>
+            <div className="mt-user-avatar" style={{ backgroundColor: '#2C2C2C', color: '#FFFFFF', border: 'none' }}>EV</div>
             <div className="mt-user-info">
-              <span className="mt-user-name">Usuario Admin</span>
-              <span className="mt-user-role">Administrador</span>
+              <span className="mt-user-name">Evelin</span>
+              <span className="mt-user-role">Administración</span>
             </div>
           </div>
         </div>
@@ -79,10 +76,6 @@ export default function MainLayout() {
             <span>Sistema Mitron</span>
             <span>/</span>
             <span className="mt-breadcrumb-current">{getPageTitle()}</span>
-          </div>
-
-          <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center' }}>
-            <img src="/logo.png" alt="Electrónica Mitron Audiovisión" style={{ height: '36px', objectFit: 'contain' }} />
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', position: 'relative' }}>

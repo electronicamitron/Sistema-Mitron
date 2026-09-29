@@ -76,7 +76,7 @@ export default function Login() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="ulises@mitron.mx"
+              placeholder="........."
               style={{
                 width: '100%', padding: '12px 14px', backgroundColor: '#FFFFFF',
                 border: '1px solid #E2E8F0', borderRadius: '8px', color: '#0F172A',
