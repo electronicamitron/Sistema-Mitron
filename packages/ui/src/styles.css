@@ -1,5 +1,7 @@
 /* Mitron Design Tokens */
 
+@import "tailwindcss";
+
 :root {
   --mt-bg: #111315;
   --mt-surface: #292C2D;
@@ -41,4 +43,46 @@
   --ring: #525252;
   --ring-offset-background: #111315;
   --ring-offset-color: #111315;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-mt-bg: var(--mt-bg);
+  --color-mt-surface: var(--mt-surface);
+  --color-mt-surface-subtle: var(--mt-surface-subtle);
+  --color-mt-surface-hover: var(--mt-surface-hover);
+  --color-mt-border: var(--mt-border);
+  --color-mt-border-subtle: var(--mt-border-subtle);
+  --color-mt-text-primary: var(--mt-text-primary);
+  --color-mt-text-secondary: var(--mt-text-secondary);
+  --color-mt-text-muted: var(--mt-text-muted);
+  --color-mt-warning-bg: var(--mt-warning-bg);
+  --color-mt-warning-border: var(--mt-warning-border);
+  --color-mt-warning-text: var(--mt-warning-text);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  
+  --shadow-mt: var(--mt-shadow);
+  --shadow-mt-hover: var(--mt-shadow-hover);
 }

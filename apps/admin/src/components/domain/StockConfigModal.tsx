@@ -25,41 +25,39 @@ export function StockConfigModal({ isOpen, onClose, productId }: { isOpen: boole
     onClose();
   };
 
-  const badgeStyle = (color: string, bg: string, border: string) => ({
-    display: 'inline-flex', alignItems: 'center', padding: '4px 10px', borderRadius: '9999px',
-    fontSize: '12px', fontWeight: 500, backgroundColor: bg, border: `1px solid ${border}`, color
-  } as const);
+  const badgeClass = (colorClass: string, bgClass: string, borderClass: string) => 
+    `inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${bgClass} ${borderClass} ${colorClass}`;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Configurar Límite de Stock" width="360px">
-      <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-        <p style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: 600, color: 'var(--mt-text-primary)' }}>{product.name}</p>
-        <p style={{ margin: 0, fontSize: '12px', color: 'var(--mt-text-secondary)' }}>SKU: {product.sku}</p>
+      <div className="mb-5 text-center">
+        <p className="m-0 mb-1 text-[15px] font-semibold text-mt-text-primary">{product.name}</p>
+        <p className="m-0 text-xs text-mt-text-secondary">SKU: {product.sku}</p>
       </div>
       
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
-        <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', marginBottom: '12px' }}>Avisar cuando las existencias bajen de:</p>
-        <div style={{ display: 'inline-flex', alignItems: 'center', borderRadius: '8px', border: '1px solid var(--mt-border)', overflow: 'hidden', backgroundColor: 'var(--mt-surface-subtle)' }}>
+      <div className="flex flex-col items-center mb-6">
+        <p className="text-[13px] text-mt-text-secondary mb-3">Avisar cuando las existencias bajen de:</p>
+        <div className="inline-flex items-center rounded-lg border border-mt-border overflow-hidden bg-mt-surface-subtle">
           <button 
             onClick={() => setLimit(Math.max(0, limit - 1))} 
-            style={{ backgroundColor: 'var(--mt-surface)', color: 'var(--mt-text-primary)', border: 'none', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '18px', fontWeight: 600 }}
+            className="bg-mt-surface text-mt-text-primary border-none w-10 h-10 flex items-center justify-center cursor-pointer text-lg font-semibold hover:bg-mt-surface-hover"
           >−</button>
-          <div style={{ minWidth: '56px', textAlign: 'center', fontSize: '16px', fontWeight: 600, color: 'var(--mt-text-primary)', padding: '0 12px' }}>{limit}</div>
+          <div className="min-w-[56px] text-center text-base font-semibold text-mt-text-primary px-3">{limit}</div>
           <button 
             onClick={() => setLimit(limit + 1)} 
-            style={{ backgroundColor: 'var(--mt-surface)', color: 'var(--mt-text-primary)', border: 'none', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '18px', fontWeight: 600 }}
+            className="bg-mt-surface text-mt-text-primary border-none w-10 h-10 flex items-center justify-center cursor-pointer text-lg font-semibold hover:bg-mt-surface-hover"
           >+</button>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '24px' }}>
-        <span style={badgeStyle('#7CE38B', '#142818', '#1E4624')}>Verde &gt; {limit}</span>
-        <span style={badgeStyle('var(--mt-warning-text)', 'var(--mt-warning-bg)', 'var(--mt-warning-border)')}>Ámbar ≤ {limit}</span>
+      <div className="flex gap-2 justify-center mb-6">
+        <span className={badgeClass('text-[#7CE38B]', 'bg-[#142818]', 'border-[#1E4624]')}>Verde &gt; {limit}</span>
+        <span className={badgeClass('text-mt-warning-text', 'bg-mt-warning-bg', 'border-mt-warning-border')}>Ámbar ≤ {limit}</span>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'stretch', gap: '8px' }}>
-        <Button variant="ghost" onClick={onClose} style={{ flex: 1 }}>Cancelar</Button>
-        <Button variant="primary" onClick={handleSave} style={{ flex: 1 }}>Guardar límite</Button>
+      <div className="flex justify-stretch gap-2">
+        <Button variant="ghost" onClick={onClose} className="flex-1">Cancelar</Button>
+        <Button variant="primary" onClick={handleSave} className="flex-1">Guardar límite</Button>
       </div>
     </Modal>
   );

@@ -41,89 +41,62 @@ export default function Login() {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: 'var(--mt-bg)',
-      backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.05) 0%, transparent 50%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '24px',
-      fontFamily: "'Inter', sans-serif"
-    }} className="animate-fade-in">
+    <div className="min-h-screen bg-mt-bg flex items-center justify-center p-6 animate-fade-in" style={{ backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.05) 0%, transparent 50%)' }}>
       
-      <div style={{
-        width: '100%',
-        maxWidth: '400px',
-        backgroundColor: 'var(--mt-surface)',
-        borderRadius: '16px',
-        padding: '48px 40px',
-        border: '1px solid var(--mt-border)',
-        boxShadow: 'var(--mt-shadow-hover)',
-        boxSizing: 'border-box'
-      }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '40px' }}>
-          <div style={{ 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px'
-          }}>
-            <img src="/logo2.png" alt="Electrónica Mitron" style={{ height: '64px', objectFit: 'contain' }} onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '<span style="color:#FFF;font-size:28px;font-weight:bold;letter-spacing:2px;">MITRON</span>'; }} />
+      <div className="w-full max-w-[400px] bg-mt-surface rounded-2xl py-12 px-10 border border-mt-border shadow-mt-hover">
+        <div className="flex flex-col items-center mb-10">
+          <div className="flex items-center justify-center mb-6">
+            <img src="/logo2.png" alt="Electrónica Mitron" className="h-16 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '<span class="text-white text-2xl font-bold tracking-widest">MITRON</span>'; }} />
           </div>
-          <h1 style={{ color: 'var(--mt-text-primary)', fontSize: '24px', fontWeight: 600, margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>
+          <h1 className="text-mt-text-primary text-2xl font-semibold m-0 mb-2 tracking-tight">
             Bienvenido de nuevo
           </h1>
-          <p style={{ color: 'var(--mt-text-secondary)', fontSize: '14px', margin: 0, textAlign: 'center' }}>
+          <p className="text-mt-text-secondary text-sm m-0 text-center">
             Ingresa tus credenciales para continuar
           </p>
         </div>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ color: 'var(--mt-text-primary)', fontSize: '13px', fontWeight: 500 }}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <label className="text-mt-text-primary text-sm font-medium">
               Usuario
             </label>
             <Input
               type="text"
               placeholder="Ingresa tu usuario (mitron)"
               {...form.register('email')}
-              style={{ width: '100%', padding: '12px 16px', backgroundColor: 'var(--mt-surface-subtle)', fontSize: '14px' }}
+              className="w-full px-4 py-3 bg-mt-surface-subtle text-sm"
             />
-            {form.formState.errors.email && <span style={{ color: '#fb7185', fontSize: '12px' }}>{form.formState.errors.email.message}</span>}
+            {form.formState.errors.email && <span className="text-red-400 text-xs">{form.formState.errors.email.message}</span>}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ color: 'var(--mt-text-primary)', fontSize: '13px', fontWeight: 500 }}>
+          <div className="flex flex-col gap-2">
+            <label className="text-mt-text-primary text-sm font-medium">
               Contraseña
             </label>
             <Input
               type="password"
               placeholder="••••••••"
               {...form.register('password')}
-              style={{ width: '100%', padding: '12px 16px', backgroundColor: 'var(--mt-surface-subtle)', fontSize: '14px', letterSpacing: '2px' }}
+              className="w-full px-4 py-3 bg-mt-surface-subtle text-sm tracking-[2px]"
             />
-            {form.formState.errors.password && <span style={{ color: '#fb7185', fontSize: '12px' }}>{form.formState.errors.password.message}</span>}
+            {form.formState.errors.password && <span className="text-red-400 text-xs">{form.formState.errors.password.message}</span>}
           </div>
 
           <Button
             type="submit"
             disabled={isLoading}
             variant="primary"
-            style={{ width: '100%', marginTop: '12px', height: '48px', fontSize: '15px' }}
+            className="w-full mt-3 h-12 text-[15px]"
           >
             {isLoading ? (
-              <span style={{ display: 'inline-block', width: '18px', height: '18px', border: '2px solid rgba(0,0,0,0.3)', borderTopColor: '#000', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <span className="inline-block w-[18px] h-[18px] border-2 border-black/30 border-t-black rounded-full animate-spin" />
             ) : (
               <>Iniciar sesión <ArrowRight size={16} className="ml-2" /></>
             )}
           </Button>
         </form>
       </div>
-      <style>
-        {`
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}
-      </style>
     </div>
   );
 }

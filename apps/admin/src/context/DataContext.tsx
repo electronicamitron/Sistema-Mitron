@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
 export type EventType = 'pago' | 'fiscal' | 'operativo' | 'inventario';
@@ -174,10 +175,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const getStockStatus = (stock: number | null, minStock: number): { status: 'disponible' | 'bajo' | 'sin' | 'revisar'; label: string; color: string; bgColor: string } => {
-    if (stock === null) return { status: 'revisar', label: 'Por conciliar', color: '#60a5fa', bgColor: 'rgba(96, 165, 250, 0.1)' };
-    if (stock === 0) return { status: 'sin', label: 'Sin existencias', color: '#fb7185', bgColor: 'rgba(244, 63, 94, 0.1)' };
-    if (stock <= minStock) return { status: 'bajo', label: 'Stock bajo', color: '#fbbf24', bgColor: 'rgba(251, 191, 36, 0.1)' };
-    return { status: 'disponible', label: 'Disponible', color: '#34d399', bgColor: 'rgba(52, 211, 153, 0.1)' };
+    if (stock === null) return { status: 'revisar', label: 'Por conciliar', color: 'text-blue-400', bgColor: 'bg-blue-400/10' };
+    if (stock === 0) return { status: 'sin', label: 'Sin existencias', color: 'text-rose-400', bgColor: 'bg-rose-400/10' };
+    if (stock <= minStock) return { status: 'bajo', label: 'Stock bajo', color: 'text-amber-400', bgColor: 'bg-amber-400/10' };
+    return { status: 'disponible', label: 'Disponible', color: 'text-emerald-400', bgColor: 'bg-emerald-400/10' };
   };
 
   return (

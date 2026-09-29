@@ -31,23 +31,12 @@ export default function Administration() {
     ] as const;
 
     return (
-      <div style={{ display: 'flex', gap: '24px', marginTop: '24px', borderBottom: '1px solid var(--mt-border)' }}>
+      <div className="flex gap-6 mt-6 border-b border-mt-border">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: activeTab === tab.id ? 'var(--mt-text-primary)' : 'var(--mt-text-secondary)',
-              fontWeight: activeTab === tab.id ? 600 : 500,
-              fontSize: '14px',
-              cursor: 'pointer',
-              padding: '0 0 12px 0',
-              borderBottom: activeTab === tab.id ? '2px solid var(--mt-text-primary)' : '2px solid transparent',
-              transition: 'all 0.2s',
-              marginBottom: '-1px'
-            }}
+            className={`bg-transparent border-none text-sm cursor-pointer pb-3 transition-all -mb-[1px] ${activeTab === tab.id ? 'text-mt-text-primary font-semibold border-b-2 border-mt-text-primary' : 'text-mt-text-secondary font-medium border-b-2 border-transparent'}`}
           >
             {tab.label}
           </button>
@@ -167,7 +156,6 @@ export default function Administration() {
         if (start && line.trim()) {
           const parts = line.split(/[\t,]/);
           if (parts.length >= 2) {
-            // Attempt to find a date in the format YYYY-MM-DD or DD/MM/YYYY
             if (!detectedDate) {
               const dateMatch = line.match(/\b(20\d{2}-\d{2}-\d{2}|\d{2}\/\d{2}\/20\d{2})\b/);
               if (dateMatch) {
@@ -182,7 +170,6 @@ export default function Administration() {
 
             let importe = parseFloat(parts[parts.length - 1].replace(/[^0-9.-]+/g,""));
             if (isNaN(importe) && parts.length > 3) {
-              // try to find the first numeric value from the end
               for(let i = parts.length - 1; i >= 0; i--) {
                 const val = parseFloat(parts[i].replace(/[^0-9.-]+/g,""));
                 if (!isNaN(val)) {
@@ -203,7 +190,9 @@ export default function Administration() {
         throw new Error("No se detectaron montos válidos asociados a los registros.");
       }
 
-      const total = amount * 1.16; // Add IVA
+      // CORRECCIÓN: No asumir IVA del 16% sin confirmación de la regla de negocio
+      const total = amount; 
+      warnings.push("Pendiente de confirmar si el importe incluye IVA según las reglas del negocio. Mostrando valor extraído.");
       
       let baseDate = new Date();
       if (detectedDate) {
@@ -272,7 +261,6 @@ export default function Administration() {
     };
     reader.readAsText(file);
     
-    // Reset
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -307,15 +295,15 @@ export default function Administration() {
   };
 
   const incomesColumns: ColumnDef<any, any>[] = useMemo(() => [
-    { accessorKey: 'period', header: 'Período', cell: (info: CellContext<any, any>) => <span style={{ fontWeight: 500 }}>{info.getValue() as string}</span> },
-    { accessorKey: 'filename', header: 'Archivo', cell: (info: CellContext<any, any>) => <span style={{ color: 'var(--mt-text-secondary)' }}>{info.getValue() as string}</span> },
+    { accessorKey: 'period', header: 'Período', cell: (info: CellContext<any, any>) => <span className="font-medium">{info.getValue() as string}</span> },
+    { accessorKey: 'filename', header: 'Archivo', cell: (info: CellContext<any, any>) => <span className="text-mt-text-secondary">{info.getValue() as string}</span> },
     { accessorKey: 'amount', header: 'Importe', cell: (info: CellContext<any, any>) => formatCurrency(info.getValue() as number) },
-    { accessorKey: 'total', header: 'Total c/IVA', cell: (info: CellContext<any, any>) => <span style={{ fontWeight: 500 }}>{formatCurrency(info.getValue() as number)}</span> },
+    { accessorKey: 'total', header: 'Total c/IVA', cell: (info: CellContext<any, any>) => <span className="font-medium">{formatCurrency(info.getValue() as number)}</span> },
     { accessorKey: 'status', header: 'Estado', cell: (info: CellContext<any, any>) => {
         const status = info.getValue() as string;
         const isOk = status === 'verificado';
         const isErr = status === 'error';
-        return <span style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 10px', borderRadius: '9999px', fontSize: '12px', fontWeight: 500, backgroundColor: isOk ? '#142818' : isErr ? '#2F1517' : 'var(--mt-warning-bg)', border: `1px solid ${isOk ? '#1E4624' : isErr ? '#542226' : 'var(--mt-warning-border)'}`, color: isOk ? '#7CE38B' : isErr ? '#F87171' : 'var(--mt-warning-text)' }}>{status}</span>;
+        return <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${isOk ? 'bg-[#142818] border-[#1E4624] text-[#7CE38B]' : isErr ? 'bg-[#2F1517] border-[#542226] text-rose-400' : 'bg-mt-warning-bg border-mt-warning-border text-mt-warning-text'}`}>{status}</span>;
     }},
     { id: 'actions', header: 'Acciones', cell: () => (
       <Button variant="ghost" size="sm" onClick={() => setIsCalcOpen(true)} className="flex items-center gap-1.5">
@@ -326,15 +314,15 @@ export default function Administration() {
 
   const expensesColumns: ColumnDef<any, any>[] = useMemo(() => [
     { accessorKey: 'date', header: 'Fecha' },
-    { accessorKey: 'supplier', header: 'Proveedor', cell: (info: CellContext<any, any>) => <span style={{ fontWeight: 500 }}>{info.getValue() as string}</span> },
-    { accessorKey: 'invoiceId', header: 'Factura', cell: (info: CellContext<any, any>) => <span style={{ color: 'var(--mt-text-secondary)' }}>{info.getValue() as string}</span> },
-    { accessorKey: 'category', header: 'Clasificación', cell: (info: CellContext<any, any>) => <span className="bg-[var(--mt-surface-subtle)] px-2 py-0.5 rounded text-[11px]">{info.getValue() as string}</span> },
-    { accessorKey: 'total', header: 'Total', cell: (info: CellContext<any, any>) => <span style={{ fontWeight: 500 }}>{formatCurrency(info.getValue() as number)}</span> },
+    { accessorKey: 'supplier', header: 'Proveedor', cell: (info: CellContext<any, any>) => <span className="font-medium">{info.getValue() as string}</span> },
+    { accessorKey: 'invoiceId', header: 'Factura', cell: (info: CellContext<any, any>) => <span className="text-mt-text-secondary">{info.getValue() as string}</span> },
+    { accessorKey: 'category', header: 'Clasificación', cell: (info: CellContext<any, any>) => <span className="bg-mt-surface-subtle px-2 py-0.5 rounded text-[11px]">{info.getValue() as string}</span> },
+    { accessorKey: 'total', header: 'Total', cell: (info: CellContext<any, any>) => <span className="font-medium">{formatCurrency(info.getValue() as number)}</span> },
     { accessorKey: 'status', header: 'Estado', cell: (info: CellContext<any, any>) => {
         const status = info.getValue() as string;
         const isPaid = status === 'pagado';
         const isPpd = status === 'ppd';
-        return <span style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 10px', borderRadius: '9999px', fontSize: '12px', fontWeight: 500, backgroundColor: isPaid ? '#142818' : isPpd ? 'var(--mt-warning-bg)' : '#2F1517', border: `1px solid ${isPaid ? '#1E4624' : isPpd ? 'var(--mt-warning-border)' : '#542226'}`, color: isPaid ? '#7CE38B' : isPpd ? 'var(--mt-warning-text)' : '#F87171' }}>{status.toUpperCase()}</span>;
+        return <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${isPaid ? 'bg-[#142818] border-[#1E4624] text-[#7CE38B]' : isPpd ? 'bg-mt-warning-bg border-mt-warning-border text-mt-warning-text' : 'bg-[#2F1517] border-[#542226] text-rose-400'}`}>{status.toUpperCase()}</span>;
     }},
     { id: 'actions', header: 'Acciones', cell: () => (
       <Button variant="ghost" size="sm" onClick={() => setIsCalcOpen(true)} className="flex items-center gap-1.5">
@@ -344,9 +332,9 @@ export default function Administration() {
   ], []);
 
   const supplierColumns: ColumnDef<any, any>[] = useMemo(() => [
-    { accessorKey: 'name', header: 'Proveedor', cell: (info: CellContext<any, any>) => <span style={{ fontWeight: 500 }}>{info.getValue() as string}</span> },
-    { accessorKey: 'rfc', header: 'RFC', cell: (info: CellContext<any, any>) => <span style={{ color: 'var(--mt-text-secondary)' }}>{info.getValue() as string}</span> },
-    { accessorKey: 'total', header: 'Total Comprado', cell: (info: CellContext<any, any>) => <span style={{ fontWeight: 500 }}>{info.getValue() as string}</span> },
+    { accessorKey: 'name', header: 'Proveedor', cell: (info: CellContext<any, any>) => <span className="font-medium">{info.getValue() as string}</span> },
+    { accessorKey: 'rfc', header: 'RFC', cell: (info: CellContext<any, any>) => <span className="text-mt-text-secondary">{info.getValue() as string}</span> },
+    { accessorKey: 'total', header: 'Total Comprado', cell: (info: CellContext<any, any>) => <span className="font-medium">{info.getValue() as string}</span> },
     { accessorKey: 'lastDate', header: 'Última Compra' },
     { id: 'actions', header: 'Acciones', cell: () => (
       <Button variant="secondary" size="sm" onClick={() => setIsSupplierOpen(true)} className="flex items-center gap-1.5">
@@ -358,28 +346,22 @@ export default function Administration() {
   const dummySuppliers = [{ name: 'PROVEEDOR EJEMPLO S.A. DE C.V.', rfc: 'EXA123456789', total: '$10,000.00', lastDate: '08/07/2026' }];
 
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+    <div className="animate-fade-in flex flex-col gap-8">
       <div>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        <div className="flex items-start justify-between">
           <div>
-            <h1 className="mt-page-title" style={{ fontSize: '28px', letterSpacing: '-0.8px', marginBottom: '4px' }}>Administración</h1>
-            <p className="mt-page-subtitle" style={{ fontSize: '14px', color: 'var(--mt-text-secondary)' }}>Gestiona los ingresos, gastos y directorio de proveedores.</p>
+            <h1 className="mt-page-title text-[28px] tracking-tight mb-1">Administración</h1>
+            <p className="mt-page-subtitle text-sm text-mt-text-secondary">Gestiona los ingresos, gastos y directorio de proveedores.</p>
           </div>
           {(activeTab === 'ingresos' || activeTab === 'gastos') && (
             <div>
-              <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept={activeTab === 'ingresos' ? '.txt,.csv' : '.xml'} onChange={handleFileUpload} />
+              <input type="file" ref={fileInputRef} className="hidden" accept={activeTab === 'ingresos' ? '.txt,.csv' : '.xml'} onChange={handleFileUpload} />
               <button 
                 onClick={() => fileInputRef.current?.click()}
-                className="mt-btn-secondary"
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '8px', 
-                  backgroundColor: 'var(--mt-surface-subtle)', border: '1px solid var(--mt-border)', 
-                  padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', 
-                  color: 'var(--mt-text-primary)', transition: 'all 0.2s', fontWeight: 500
-                }}
+                className="flex items-center gap-2 bg-mt-surface-subtle border border-mt-border px-4 py-2.5 rounded-lg cursor-pointer text-mt-text-primary transition-all font-medium hover:bg-mt-surface-hover hover:border-mt-text-muted"
               >
                 <Upload size={16} />
-                <span style={{ fontSize: '14px' }}>Importar archivo {activeTab === 'ingresos' ? 'TXT' : 'XML'}</span>
+                <span className="text-sm">Importar archivo {activeTab === 'ingresos' ? 'TXT' : 'XML'}</span>
               </button>
             </div>
           )}
@@ -431,18 +413,18 @@ export default function Administration() {
 
       <Modal isOpen={previewOpen} onClose={cancelImport} title="Vista previa de importación" width="450px">
         {previewData && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', backgroundColor: 'var(--mt-surface-subtle)', borderRadius: '8px', border: '1px solid var(--mt-border)' }}>
-              <FileText size={24} style={{ color: '#60a5fa' }} />
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-3 p-4 bg-mt-surface-subtle rounded-lg border border-mt-border">
+              <FileText size={24} className="text-blue-400" />
               <div>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--mt-text-primary)' }}>{previewData.filename}</div>
-                <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)' }}>Tipo: {previewData.fileType}</div>
+                <div className="text-sm font-semibold text-mt-text-primary">{previewData.filename}</div>
+                <div className="text-xs text-mt-text-secondary">Tipo: {previewData.fileType}</div>
               </div>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div style={{ backgroundColor: 'var(--mt-surface)', padding: '12px', borderRadius: '8px', border: '1px solid var(--mt-border)' }}>
-                <div style={{ fontSize: '11px', color: 'var(--mt-text-secondary)', marginBottom: '4px' }}>Período / Fecha</div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-mt-surface p-3 rounded-lg border border-mt-border">
+                <div className="text-[11px] text-mt-text-secondary mb-1">Período / Fecha</div>
                 {previewData.needsPeriodSelection || previewData.type === 'ingresos' ? (
                   <input 
                     type="date" 
@@ -454,40 +436,40 @@ export default function Administration() {
                         ...prev, period: p, data: { ...prev.data, date: e.target.value, period: p }
                       }));
                     }}
-                    style={{ width: '100%', background: 'transparent', border: 'none', color: 'var(--mt-text-primary)', fontSize: '14px', outline: 'none', fontFamily: 'inherit' }}
+                    className="w-full bg-transparent border-none text-mt-text-primary text-sm outline-none font-sans"
                   />
                 ) : (
-                  <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--mt-text-primary)' }}>{previewData.period}</div>
+                  <div className="text-sm font-medium text-mt-text-primary">{previewData.period}</div>
                 )}
               </div>
-              <div style={{ backgroundColor: 'var(--mt-surface)', padding: '12px', borderRadius: '8px', border: '1px solid var(--mt-border)' }}>
-                <div style={{ fontSize: '11px', color: 'var(--mt-text-secondary)', marginBottom: '4px' }}>Registros</div>
-                <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--mt-text-primary)' }}>{previewData.records} detectados</div>
+              <div className="bg-mt-surface p-3 rounded-lg border border-mt-border">
+                <div className="text-[11px] text-mt-text-secondary mb-1">Registros</div>
+                <div className="text-sm font-medium text-mt-text-primary">{previewData.records} detectados</div>
               </div>
             </div>
 
-            <div style={{ backgroundColor: 'var(--mt-surface)', padding: '16px', borderRadius: '8px', border: '1px solid var(--mt-border)', textAlign: 'center' }}>
-              <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', marginBottom: '4px' }}>Total reconocido</div>
-              <div style={{ fontSize: '24px', fontWeight: 700, color: previewData.type === 'ingresos' ? '#34d399' : '#fb7185' }}>
+            <div className="bg-mt-surface p-4 rounded-lg border border-mt-border text-center">
+              <div className="text-xs text-mt-text-secondary mb-1">Total reconocido</div>
+              <div className={`text-2xl font-bold ${previewData.type === 'ingresos' ? 'text-emerald-400' : 'text-rose-400'}`}>
                 {previewData.total ? formatCurrency(previewData.total) : formatCurrency(previewData.amount)}
               </div>
             </div>
 
             {previewData.warnings && previewData.warnings.length > 0 && (
-              <div style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', padding: '12px', borderRadius: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fbbf24', fontWeight: 600, fontSize: '13px', marginBottom: '8px' }}>
+              <div className="bg-amber-400/10 border border-amber-400/20 p-3 rounded-lg">
+                <div className="flex items-center gap-2 text-amber-400 font-semibold text-[13px] mb-2">
                   <AlertTriangle size={16} />
                   Advertencias
                 </div>
-                <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: 'var(--mt-text-secondary)' }}>
+                <ul className="m-0 pl-5 text-xs text-mt-text-secondary list-disc">
                   {previewData.warnings.map((w: string, i: number) => <li key={i}>{w}</li>)}
                 </ul>
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-              <Button variant="ghost" size="md" onClick={cancelImport} style={{ flex: 1 }}>Cancelar</Button>
-              <Button variant="primary" size="md" onClick={confirmImport} style={{ flex: 1, gap: '8px' }}>
+            <div className="flex gap-3 mt-4">
+              <Button variant="ghost" size="md" onClick={cancelImport} className="flex-1">Cancelar</Button>
+              <Button variant="primary" size="md" onClick={confirmImport} className="flex-1 gap-2">
                 <CheckCircle size={16} /> Confirmar
               </Button>
             </div>

@@ -27,26 +27,27 @@ export default function Inventory() {
         const p = info.row.original;
         return (
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ fontWeight: 600, color: 'var(--mt-text-primary)' }}>{p.name}</div>
-              {p.isMock && <span style={{ fontSize: '9px', backgroundColor: 'var(--mt-surface-subtle)', color: 'var(--mt-text-secondary)', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>DEMO</span>}
+            <div className="flex items-center gap-2">
+              <div className="font-semibold text-mt-text-primary">{p.name}</div>
+              {p.isMock && <span className="text-[9px] bg-mt-surface-subtle text-mt-text-secondary px-1.5 py-0.5 rounded font-semibold">DEMO</span>}
             </div>
-            <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', marginTop: '2px' }}>{p.sku}</div>
+            <div className="text-xs text-mt-text-secondary mt-0.5">{p.sku}</div>
           </div>
         )
       } 
     },
-    { accessorKey: 'supplier', header: 'Proveedor', cell: (info: CellContext<any, any>) => <span style={{ color: 'var(--mt-text-secondary)' }}>{info.getValue() as string}</span> },
+    { accessorKey: 'supplier', header: 'Proveedor', cell: (info: CellContext<any, any>) => <span className="text-mt-text-secondary">{info.getValue() as string}</span> },
     { accessorKey: 'stock', header: 'Saldo', cell: (info: CellContext<any, any>) => {
         const stock = info.getValue() as number | null;
-        return <span style={{ fontWeight: 600, fontSize: '15px', color: (stock !== null && stock < 0) ? '#fb7185' : 'inherit' }}>{stock !== null ? stock : '-'}</span>;
+        return <span className={`font-semibold text-[15px] ${(stock !== null && stock < 0) ? 'text-rose-400' : 'text-inherit'}`}>{stock !== null ? stock : '-'}</span>;
     }},
-    { accessorKey: 'minStock', header: 'Mínimo', cell: (info: CellContext<any, any>) => <span style={{ color: 'var(--mt-text-secondary)' }}>{info.getValue() as number}</span> },
+    { accessorKey: 'minStock', header: 'Mínimo', cell: (info: CellContext<any, any>) => <span className="text-mt-text-secondary">{info.getValue() as number}</span> },
     { id: 'status', header: 'Estado', cell: (info: CellContext<any, any>) => {
         const p = info.row.original;
         const statusObj = getStockStatus(p.stock, p.minStock);
+        // Using classes instead of inline styles
         return (
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: statusObj.bgColor, color: statusObj.color, padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 500, border: `1px solid ${statusObj.bgColor}` }}>
+          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-transparent ${statusObj.bgColor} ${statusObj.color}`}>
             {statusObj.status === 'disponible' && <PackageCheck size={14} />}
             {statusObj.status === 'bajo' && <PackageMinus size={14} />}
             {statusObj.status === 'sin' && <PackageX size={14} />}
@@ -69,17 +70,17 @@ export default function Inventory() {
   });
 
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <div className="mt-page-header" style={{ marginBottom: 0 }}>
+    <div className="animate-fade-in flex flex-col gap-6">
+      <div className="mt-page-header mb-0">
         <div>
-          <h1 className="mt-page-title" style={{ fontSize: '28px', letterSpacing: '-0.8px', marginBottom: '4px' }}>Inventario</h1>
-          <p className="mt-page-subtitle" style={{ fontSize: '14px', color: 'var(--mt-text-secondary)' }}>Existencias, movimientos y alertas de stock.</p>
+          <h1 className="mt-page-title text-[28px] tracking-tight mb-1">Inventario</h1>
+          <p className="mt-page-subtitle text-sm text-mt-text-secondary">Existencias, movimientos y alertas de stock.</p>
         </div>
       </div>
 
-      <div className="mt-panel" style={{ borderRadius: '12px', border: '1px solid var(--mt-border)', backgroundColor: 'var(--mt-surface)', padding: '20px' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '24px', justifyContent: 'flex-end' }}>
-          <div style={{ width: '200px' }}>
+      <div className="mt-panel rounded-xl border border-mt-border bg-mt-surface p-5">
+        <div className="flex flex-wrap gap-4 mb-6 justify-end">
+          <div className="w-[200px]">
             <Select value={statusFilter || 'all'} onValueChange={(val) => setStatusFilter(val === 'all' ? '' : val)}>
               <SelectTrigger>
                 <SelectValue placeholder="Todos los estados" />

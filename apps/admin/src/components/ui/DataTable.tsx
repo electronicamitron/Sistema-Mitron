@@ -74,7 +74,7 @@ export function DataTable<TData, TValue>({
           />
         </div>
       )}
-      <div className="rounded-md border border-[var(--mt-border)] overflow-hidden">
+      <div className="rounded-md border border-mt-border overflow-hidden">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup: HeaderGroup<TData>) => (
@@ -115,7 +115,7 @@ export function DataTable<TData, TValue>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center text-[var(--mt-text-muted)]"
+                  className="h-24 text-center text-mt-text-muted"
                 >
                   No hay resultados.
                 </TableCell>

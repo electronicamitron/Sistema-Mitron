@@ -11,15 +11,16 @@ export default function Dashboard() {
   const { incomes, expenses, products, notifications } = useData();
   
   const [period, setPeriod] = useState('0'); // 0 = Mes actual
+  
+  const today = useMemo(() => new Date(), []);
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(val);
   };
 
-  const getFilteredData = (data: Array<{date: string}>) => {
-    const today = new Date();
-    const targetMonth = period === '0' ? today.getMonth() : (today.getMonth() - 1 + 12) % 12;
-    const targetYear = period === '0' ? today.getFullYear() : (today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear());
+  const getFilteredData = (data: Array<{date: string}>, periodVal: string, baseDate: Date) => {
+    const targetMonth = periodVal === '0' ? baseDate.getMonth() : (baseDate.getMonth() - 1 + 12) % 12;
+    const targetYear = periodVal === '0' ? baseDate.getFullYear() : (baseDate.getMonth() === 0 ? baseDate.getFullYear() - 1 : baseDate.getFullYear());
     
     return data.filter(item => {
       if (!item.date) return false;
@@ -28,20 +29,21 @@ export default function Dashboard() {
     });
   };
 
-  const filteredIncomes = getFilteredData(incomes) as typeof incomes;
-  const filteredExpenses = getFilteredData(expenses) as typeof expenses;
+  const filteredIncomes = useMemo(() => getFilteredData(incomes, period, today) as typeof incomes, [incomes, period, today]);
+  const filteredExpenses = useMemo(() => getFilteredData(expenses, period, today) as typeof expenses, [expenses, period, today]);
 
-  const totalIngresos = filteredIncomes.reduce((acc, curr) => acc + curr.total, 0);
-  const totalGastos = filteredExpenses.reduce((acc, curr) => acc + curr.total, 0);
-  const totalCompras = filteredExpenses.filter(e => e.category === 'Mercancía' || e.category === 'Importación').reduce((acc, curr) => acc + curr.total, 0);
+  const totalIngresos = useMemo(() => filteredIncomes.reduce((acc, curr) => acc + curr.total, 0), [filteredIncomes]);
+  const totalGastos = useMemo(() => filteredExpenses.reduce((acc, curr) => acc + curr.total, 0), [filteredExpenses]);
+  const totalCompras = useMemo(() => filteredExpenses.filter(e => e.category === 'Mercancía' || e.category === 'Importación').reduce((acc, curr) => acc + curr.total, 0), [filteredExpenses]);
+  
   const stockAtencionReal = products.filter(p => !p.isMock && ((p.stock !== null && p.stock <= p.minStock) || p.stock === null)).length;
   const stockAtencionDemo = products.filter(p => p.isMock && ((p.stock !== null && p.stock <= p.minStock) || p.stock === null)).length;
   const stockAtencion = stockAtencionReal + stockAtencionDemo;
 
   const recentActivity = useMemo(() => {
     const activity: Array<{ id: string; title: string; time: string; icon: React.ReactNode; dateObj: Date }> = [];
-    filteredIncomes.forEach(i => activity.push({ id: `i-${i.id}`, title: `Ingreso registrado: ${i.filename}`, time: i.createdAt, icon: <ArrowUpRight size={16} style={{ color: '#34d399' }} />, dateObj: new Date(i.createdAt) }));
-    filteredExpenses.forEach(e => activity.push({ id: `e-${e.id}`, title: `Gasto registrado: ${e.supplier}`, time: e.createdAt, icon: <ArrowDownRight size={16} style={{ color: '#fb7185' }} />, dateObj: new Date(e.createdAt) }));
+    filteredIncomes.forEach(i => activity.push({ id: `i-${i.id}`, title: `Ingreso registrado: ${i.filename}`, time: i.createdAt, icon: <ArrowUpRight size={16} className="text-emerald-400" />, dateObj: new Date(i.createdAt) }));
+    filteredExpenses.forEach(e => activity.push({ id: `e-${e.id}`, title: `Gasto registrado: ${e.supplier}`, time: e.createdAt, icon: <ArrowDownRight size={16} className="text-rose-400" />, dateObj: new Date(e.createdAt) }));
     return activity.sort((a, b) => b.dateObj.getTime() - a.dateObj.getTime()).slice(0, 5);
   }, [filteredIncomes, filteredExpenses]);
 
@@ -60,27 +62,25 @@ export default function Dashboard() {
     filteredIncomes.forEach(i => addToMap(i.date, 'ingresos', i.total));
     filteredExpenses.forEach(e => addToMap(e.date, 'gastos', e.total));
 
-    const sortedData = Array.from(dataMap.values()).sort((a, b) => {
+    return Array.from(dataMap.values()).sort((a, b) => {
       const [d1, m1] = a.name.split('/').map(Number);
       const [d2, m2] = b.name.split('/').map(Number);
       if (m1 !== m2) return m1 - m2;
       return d1 - d2;
     });
-
-    return sortedData;
   }, [filteredIncomes, filteredExpenses]);
 
   const activeNotifs = notifications.slice(0, 4);
 
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-      <div className="mt-page-header" style={{ alignItems: 'flex-start', marginBottom: 0 }}>
+    <div className="animate-fade-in flex flex-col gap-8">
+      <div className="mt-page-header items-start mb-0">
         <div>
-          <h1 className="mt-page-title" style={{ fontSize: '28px', letterSpacing: '-0.8px', marginBottom: '4px' }}>Dashboard</h1>
-          <p className="mt-page-subtitle" style={{ fontSize: '14px', color: 'var(--mt-text-secondary)' }}>Resumen mensual y métricas clave.</p>
+          <h1 className="mt-page-title text-[28px] tracking-tight mb-1">Dashboard</h1>
+          <p className="mt-page-subtitle text-sm text-mt-text-secondary">Resumen mensual y métricas clave.</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px', width: '180px' }}>
-          <Select value={period} onValueChange={(val) => setPeriod(val)}>
+        <div className="flex gap-3 w-[180px]">
+          <Select value={period} onValueChange={setPeriod}>
             <SelectTrigger>
               <SelectValue placeholder="Seleccione periodo" />
             </SelectTrigger>
@@ -92,74 +92,74 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="mt-stats-grid animate-fade-in delay-100" style={{ gap: '20px' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 animate-fade-in delay-100">
         <StatCard 
-          title={<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><TrendingUp size={14} style={{ color: '#34d399' }} /> INGRESOS</div>} 
+          title={<div className="flex items-center gap-2"><TrendingUp size={14} className="text-emerald-400" /> INGRESOS</div>} 
           value={formatCurrency(totalIngresos)} 
-          caption={<span style={{ color: totalIngresos > 0 ? '#34d399' : 'var(--mt-text-muted)', fontWeight: 500 }}>{totalIngresos > 0 ? 'Actualizado' : 'Sin registros'}</span>} 
+          caption={<span className={`font-medium ${totalIngresos > 0 ? 'text-emerald-400' : 'text-mt-text-muted'}`}>{totalIngresos > 0 ? 'Actualizado' : 'Sin registros'}</span>} 
         />
         <StatCard 
-          title={<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><ArrowDownRight size={14} style={{ color: '#fb7185' }} /> GASTOS OPERATIVOS</div>} 
+          title={<div className="flex items-center gap-2"><ArrowDownRight size={14} className="text-rose-400" /> GASTOS OPERATIVOS</div>} 
           value={formatCurrency(totalGastos)} 
-          caption={<span style={{ color: totalGastos > 0 ? '#fb7185' : 'var(--mt-text-muted)', fontWeight: 500 }}>{totalGastos > 0 ? 'Actualizado' : 'Sin registros'}</span>} 
+          caption={<span className={`font-medium ${totalGastos > 0 ? 'text-rose-400' : 'text-mt-text-muted'}`}>{totalGastos > 0 ? 'Actualizado' : 'Sin registros'}</span>} 
         />
         <StatCard 
-          title={<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><ShoppingBag size={14} style={{ color: '#60a5fa' }} /> COMPRAS</div>} 
+          title={<div className="flex items-center gap-2"><ShoppingBag size={14} className="text-blue-400" /> COMPRAS</div>} 
           value={formatCurrency(totalCompras)} 
-          caption={<span style={{ color: 'var(--mt-text-muted)' }}>{filteredExpenses.length} facturas registradas</span>} 
+          caption={<span className="text-mt-text-muted">{filteredExpenses.length} facturas registradas</span>} 
         />
         <StatCard 
           title={
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Package size={14} style={{ color: '#fbbf24' }} /> STOCK Y CONCILIACIÓN</span>
+            <div className="flex items-center justify-between w-full">
+              <span className="flex items-center gap-2"><Package size={14} className="text-amber-400" /> STOCK Y CONCILIACIÓN</span>
             </div>
           } 
           value={
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+            <div className="flex items-baseline gap-2">
               <span>{stockAtencion}</span>
-              <span style={{ fontSize: '16px', fontWeight: 500, color: 'var(--mt-text-secondary)' }}>alertas</span>
+              <span className="text-base font-medium text-mt-text-secondary">alertas</span>
             </div>
           } 
           caption={
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              {stockAtencionReal > 0 && <span style={{ color: '#fbbf24', fontWeight: 600 }}>{stockAtencionReal} reales</span>}
-              {stockAtencionDemo > 0 && <span style={{ color: 'var(--mt-text-muted)', fontSize: '11px', padding: '2px 6px', backgroundColor: 'var(--mt-surface-subtle)', borderRadius: '4px' }}>{stockAtencionDemo} DEMO</span>}
-              {stockAtencion === 0 && <span style={{ color: 'var(--mt-text-muted)', fontWeight: 500 }}>Todo en orden</span>}
+            <div className="flex gap-2 items-center">
+              {stockAtencionReal > 0 && <span className="text-amber-400 font-semibold">{stockAtencionReal} reales</span>}
+              {stockAtencionDemo > 0 && <span className="text-mt-text-muted text-[11px] px-1.5 py-0.5 bg-mt-surface-subtle rounded">{stockAtencionDemo} DEMO</span>}
+              {stockAtencion === 0 && <span className="text-mt-text-muted font-medium">Todo en orden</span>}
             </div>
           }
         />
       </div>
       
-      <div className="mt-dashboard-columns animate-fade-in delay-200" style={{ gridTemplateColumns: '1fr', gap: '20px' }}>
-        <div className="mt-panel" style={{ backgroundColor: 'var(--mt-surface)', borderColor: 'var(--mt-border)', borderRadius: '12px', overflow: 'hidden' }}>
-          <div className="mt-panel-header" style={{ borderBottom: '1px solid var(--mt-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px' }}>
-            <h3 className="mt-panel-title" style={{ fontSize: '15px' }}>Evolución de ingresos y gastos</h3>
-            <button className="mt-panel-action" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--mt-text-primary)', fontWeight: 500 }} onClick={() => navigate('/administration')}>
+      <div className="grid grid-cols-1 gap-5 animate-fade-in delay-200">
+        <div className="mt-panel bg-mt-surface border-mt-border rounded-xl overflow-hidden mb-0">
+          <div className="mt-panel-header border-b border-mt-border flex justify-between items-center px-6 py-5">
+            <h3 className="mt-panel-title text-[15px]">Evolución de ingresos y gastos</h3>
+            <button className="mt-panel-action flex items-center gap-1 text-mt-text-primary font-medium" onClick={() => navigate('/administration')}>
               Detalles <ArrowUpRight size={14} />
             </button>
           </div>
-          <div style={{ padding: '32px 24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
-              <div className="mt-chart-legend" style={{ marginBottom: 0, gap: '32px' }}>
+          <div className="px-6 py-8">
+            <div className="flex justify-between items-center mb-10">
+              <div className="mt-chart-legend mb-0 gap-8">
                 <div className="mt-legend-item">
-                  <div className="mt-legend-line" style={{ backgroundColor: '#10B981', width: '16px', borderRadius: '2px' }}></div>
-                  <span style={{ color: 'var(--mt-text-primary)', fontSize: '13px', fontWeight: 500 }}>Ingresos</span>
+                  <div className="mt-legend-line bg-emerald-500 w-4 rounded-sm h-0.5"></div>
+                  <span className="text-mt-text-primary text-[13px] font-medium">Ingresos</span>
                 </div>
                 <div className="mt-legend-item">
-                  <div className="mt-legend-line" style={{ backgroundColor: '#F43F5E', width: '16px', borderRadius: '2px' }}></div>
-                  <span style={{ color: 'var(--mt-text-primary)', fontSize: '13px', fontWeight: 500 }}>Gastos</span>
+                  <div className="mt-legend-line bg-rose-500 w-4 rounded-sm h-0.5"></div>
+                  <span className="text-mt-text-primary text-[13px] font-medium">Gastos</span>
                 </div>
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', fontWeight: 500 }}>Mes actual</div>
+              <div className="text-xs text-mt-text-secondary font-medium">Mes actual</div>
             </div>
             
             {chartData.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--mt-text-muted)' }}>
-                <div style={{ fontSize: '14px', marginBottom: '8px' }}>No hay datos suficientes para generar la gráfica en este periodo.</div>
-                <div style={{ fontSize: '12px' }}>Importa archivos en Administración para visualizar la evolución.</div>
+              <div className="text-center py-16 text-mt-text-muted">
+                <div className="text-sm mb-2">No hay datos suficientes para generar la gráfica en este periodo.</div>
+                <div className="text-xs">Importa archivos en Administración para visualizar la evolución.</div>
               </div>
             ) : (
-              <div style={{ height: '260px', width: '100%', marginTop: '20px' }}>
+              <div className="h-[260px] w-full mt-5">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--mt-border-subtle)" vertical={false} />
@@ -186,44 +186,44 @@ export default function Dashboard() {
         </div>
       </div>
       
-      <div className="mt-dashboard-columns animate-fade-in delay-300" style={{ gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-        <div className="mt-panel" style={{ borderRadius: '12px' }}>
-          <div className="mt-panel-header" style={{ padding: '20px 24px' }}>
+      <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-5 animate-fade-in delay-300">
+        <div className="mt-panel rounded-xl mb-0">
+          <div className="mt-panel-header px-6 py-5">
             <h3 className="mt-panel-title">Actividad reciente</h3>
-            <button className="mt-panel-action" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--mt-text-primary)', fontWeight: 500 }}>Ver todo <ArrowUpRight size={14} /></button>
+            <button className="mt-panel-action flex items-center gap-1 text-mt-text-primary font-medium">Ver todo <ArrowUpRight size={14} /></button>
           </div>
-          <div style={{ padding: '8px' }}>
+          <div className="p-2">
             {recentActivity.length === 0 ? (
-              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--mt-text-muted)' }}>Sin actividad reciente</div>
+              <div className="p-6 text-center text-mt-text-muted">Sin actividad reciente</div>
             ) : recentActivity.map(item => (
-              <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', borderRadius: '8px', cursor: 'pointer', transition: 'background-color 0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--mt-surface-subtle)'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--mt-surface)', border: '1px solid var(--mt-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div key={item.id} className="flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-colors hover:bg-mt-surface-subtle">
+                <div className="w-10 h-10 rounded-full bg-mt-surface border border-mt-border flex items-center justify-center shrink-0">
                   {item.icon}
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--mt-text-primary)' }}>{item.title}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', marginTop: '4px' }}>{new Date(item.time).toLocaleDateString()} {new Date(item.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                  <div className="text-sm font-medium text-mt-text-primary">{item.title}</div>
+                  <div className="text-xs text-mt-text-secondary mt-1">{new Date(item.time).toLocaleDateString()} {new Date(item.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
                 </div>
               </div>
             ))}
           </div>
         </div>
-        <div className="mt-panel" style={{ borderRadius: '12px' }}>
-          <div className="mt-panel-header" style={{ padding: '20px 24px' }}>
+        <div className="mt-panel rounded-xl mb-0">
+          <div className="mt-panel-header px-6 py-5">
             <h3 className="mt-panel-title">Avisos y notificaciones</h3>
-            <button className="mt-panel-action" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--mt-text-primary)', fontWeight: 500 }}>Ver todas <ArrowUpRight size={14} /></button>
+            <button className="mt-panel-action flex items-center gap-1 text-mt-text-primary font-medium">Ver todas <ArrowUpRight size={14} /></button>
           </div>
-          <div style={{ padding: '8px' }}>
+          <div className="p-2">
              {activeNotifs.length === 0 ? (
-               <div style={{ padding: '24px', textAlign: 'center', color: 'var(--mt-text-muted)' }}>No hay notificaciones</div>
+               <div className="p-6 text-center text-mt-text-muted">No hay notificaciones</div>
              ) : activeNotifs.map(item => (
-              <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', padding: '16px', borderRadius: '8px', cursor: 'pointer', transition: 'background-color 0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--mt-surface-subtle)'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                <div style={{ marginTop: '4px' }}>
-                  <AlertCircle size={18} style={{ color: item.type === 'warning' ? '#fbbf24' : item.type === 'alert' ? '#fb7185' : item.type === 'success' ? '#34d399' : '#60a5fa' }} />
+              <div key={item.id} className="flex items-start gap-4 p-4 rounded-lg cursor-pointer transition-colors hover:bg-mt-surface-subtle">
+                <div className="mt-1">
+                  <AlertCircle size={18} className={item.type === 'warning' ? 'text-amber-400' : item.type === 'alert' ? 'text-rose-400' : item.type === 'success' ? 'text-emerald-400' : 'text-blue-400'} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--mt-text-primary)' }}>{item.title}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', marginTop: '4px' }}>{item.description}</div>
+                  <div className="text-sm font-medium text-mt-text-primary">{item.title}</div>
+                  <div className="text-xs text-mt-text-secondary mt-1">{item.description}</div>
                 </div>
               </div>
             ))}

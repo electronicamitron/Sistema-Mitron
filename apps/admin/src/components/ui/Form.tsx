@@ -29,9 +29,9 @@ export function Select({ options, className = '', value, onChange, placeholder }
 
 export function SearchField({ ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <div style={{ position: 'relative', flex: 1, minWidth: '180px' }}>
-      <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--mt-text-secondary)', zIndex: 1 }} />
-      <UIInput style={{ paddingLeft: '32px' }} {...props} />
+    <div className="relative flex-1 min-w-[180px]">
+      <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-mt-text-secondary z-10" />
+      <UIInput className="pl-8" {...props} />
     </div>
   );
 }

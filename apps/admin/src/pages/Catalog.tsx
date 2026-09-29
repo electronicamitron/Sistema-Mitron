@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { DataTable } from '../components/ui/DataTable';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { useData, type Product } from '../context/DataContext';
@@ -32,32 +32,39 @@ export default function Catalog() {
     return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(val);
   };
 
+  const form = useForm<ProductFormValues>({
+    resolver: zodResolver(productSchema) as any,
+    defaultValues: { sku: '', name: '', category: '', cost: 0, price: 0, supplier: '', status: 'vigente' }
+  });
+
+  const handleOpenEdit = useCallback((p: Product) => {
+    setEditingProduct(p);
+    form.reset({
+      sku: p.sku, name: p.name, category: p.category, cost: p.cost, price: p.price, supplier: p.supplier, status: p.status as 'vigente' | 'descontinuado'
+    });
+    setIsModalOpen(true);
+  }, [form]);
+
   const catalogColumns: ColumnDef<any, any>[] = useMemo(() => [
-    { accessorKey: 'sku', header: 'SKU', cell: (info: CellContext<any, any>) => <span style={{ fontWeight: 600, color: 'var(--mt-text-primary)' }}>{info.getValue() as string}</span> },
+    { accessorKey: 'sku', header: 'SKU', cell: (info: CellContext<any, any>) => <span className="font-semibold text-mt-text-primary">{info.getValue() as string}</span> },
     { accessorKey: 'name', header: 'Descripción', cell: (info: CellContext<any, any>) => {
         const p = info.row.original;
         return (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
+          <div className="flex items-center gap-2 font-medium">
             {p.name}
-            {p.isMock && <span style={{ fontSize: '9px', backgroundColor: 'var(--mt-surface-subtle)', color: 'var(--mt-text-secondary)', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>DEMO</span>}
+            {p.isMock && <span className="text-[9px] bg-mt-surface-subtle text-mt-text-secondary px-1.5 py-0.5 rounded font-semibold">DEMO</span>}
           </div>
         );
     }},
-    { accessorKey: 'category', header: 'Categoría', cell: (info: CellContext<any, any>) => <span style={{ backgroundColor: 'var(--mt-surface-subtle)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: 'var(--mt-text-secondary)' }}>{info.getValue() as string}</span> },
+    { accessorKey: 'category', header: 'Categoría', cell: (info: CellContext<any, any>) => <span className="bg-mt-surface-subtle px-2 py-0.5 rounded text-[11px] text-mt-text-secondary">{info.getValue() as string}</span> },
     { accessorKey: 'cost', header: 'Costo', cell: (info: CellContext<any, any>) => formatCurrency(info.getValue() as number) },
-    { accessorKey: 'price', header: 'Precio', cell: (info: CellContext<any, any>) => <span style={{ fontWeight: 600, color: info.row.original.status === 'vigente' ? '#34d399' : 'var(--mt-text-muted)' }}>{formatCurrency(info.getValue() as number)}</span> },
-    { accessorKey: 'supplier', header: 'Proveedor', cell: (info: CellContext<any, any>) => <div style={{ color: 'var(--mt-text-primary)' }}>{info.getValue() as string}</div> },
+    { accessorKey: 'price', header: 'Precio', cell: (info: CellContext<any, any>) => <span className={`font-semibold ${info.row.original.status === 'vigente' ? 'text-emerald-400' : 'text-mt-text-muted'}`}>{formatCurrency(info.getValue() as number)}</span> },
+    { accessorKey: 'supplier', header: 'Proveedor', cell: (info: CellContext<any, any>) => <div className="text-mt-text-primary">{info.getValue() as string}</div> },
     { accessorKey: 'status', header: 'Estado', cell: (info: CellContext<any, any>) => {
         const status = info.getValue() as string;
         const isActive = status === 'vigente';
         return (
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', padding: '4px 10px', borderRadius: '9999px',
-            fontSize: '12px', fontWeight: 500,
-            backgroundColor: isActive ? '#142818' : 'var(--mt-surface-subtle)',
-            border: `1px solid ${isActive ? '#1E4624' : 'var(--mt-border)'}`,
-            color: isActive ? '#7CE38B' : 'var(--mt-text-muted)'
-          }}>
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${isActive ? 'bg-[#142818] border-[#1E4624] text-[#7CE38B]' : 'bg-mt-surface-subtle border-mt-border text-mt-text-muted'}`}>
             {isActive ? 'Vigente' : 'Descontinuado'}
           </span>
         );
@@ -65,14 +72,12 @@ export default function Catalog() {
     { id: 'actions', header: 'Acciones', cell: (info: CellContext<any, any>) => (
         <button 
           onClick={() => handleOpenEdit(info.row.original)}
-          style={{ background: 'transparent', border: 'none', color: 'var(--mt-text-secondary)', cursor: 'pointer', padding: '4px', borderRadius: '4px' }}
-          onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--mt-surface-subtle)'}
-          onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
+          className="bg-transparent border-none text-mt-text-secondary cursor-pointer p-1 rounded hover:bg-mt-surface-subtle transition-colors"
         >
           <Edit2 size={16} />
         </button>
     )}
-  ], []);
+  ], [handleOpenEdit]);
 
   const filteredProducts = products.filter(p => {
     const matchCat = catFilter === 'all' || catFilter === '' || p.category === catFilter;
@@ -82,22 +87,9 @@ export default function Catalog() {
 
   const uniqueCategories = Array.from(new Set(products.map(p => p.category)));
 
-  const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema) as any,
-    defaultValues: { sku: '', name: '', category: '', cost: 0, price: 0, supplier: '', status: 'vigente' }
-  });
-
   const handleOpenNew = () => {
     setEditingProduct(null);
     form.reset({ sku: '', name: '', category: '', cost: 0, price: 0, supplier: '', status: 'vigente' });
-    setIsModalOpen(true);
-  };
-
-  const handleOpenEdit = (p: Product) => {
-    setEditingProduct(p);
-    form.reset({
-      sku: p.sku, name: p.name, category: p.category, cost: p.cost, price: p.price, supplier: p.supplier, status: p.status as 'vigente' | 'descontinuado'
-    });
     setIsModalOpen(true);
   };
 
@@ -122,32 +114,25 @@ export default function Catalog() {
   };
 
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <div className="mt-page-header" style={{ marginBottom: 0, alignItems: 'center' }}>
+    <div className="animate-fade-in flex flex-col gap-6">
+      <div className="mt-page-header mb-0 items-center">
         <div>
-          <h1 className="mt-page-title" style={{ fontSize: '28px', letterSpacing: '-0.8px', marginBottom: '4px' }}>Catálogo</h1>
-          <p className="mt-page-subtitle" style={{ fontSize: '14px', color: 'var(--mt-text-secondary)' }}>Directorio de productos, costos y precios.</p>
+          <h1 className="mt-page-title text-[28px] tracking-tight mb-1">Catálogo</h1>
+          <p className="mt-page-subtitle text-sm text-mt-text-secondary">Directorio de productos, costos y precios.</p>
         </div>
         <button 
           onClick={handleOpenNew}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '8px', 
-            backgroundColor: '#FFFFFF', border: 'none', 
-            padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', 
-            color: '#000000', transition: 'all 0.2s', fontWeight: 600
-          }}
-          onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'} 
-          onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+          className="flex items-center gap-2 bg-white border-none px-4 py-2.5 rounded-lg cursor-pointer text-black transition-all font-semibold hover:-translate-y-[1px]"
         >
           <Plus size={16} />
-          <span style={{ fontSize: '14px' }}>Nuevo Producto</span>
+          <span className="text-sm">Nuevo Producto</span>
         </button>
       </div>
 
-      <div className="mt-panel" style={{ borderRadius: '12px', border: '1px solid var(--mt-border)', backgroundColor: 'var(--mt-surface)', padding: '20px' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '24px', justifyContent: 'flex-end' }}>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <div style={{ width: '200px' }}>
+      <div className="mt-panel rounded-xl border border-mt-border bg-mt-surface p-5">
+        <div className="flex flex-wrap gap-4 mb-6 justify-end">
+          <div className="flex gap-3 flex-wrap">
+            <div className="w-[200px]">
               <Select value={catFilter || 'all'} onValueChange={(val) => setCatFilter(val === 'all' ? '' : val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todas las categorías" />
@@ -158,7 +143,7 @@ export default function Catalog() {
                 </SelectContent>
               </Select>
             </div>
-            <div style={{ width: '150px' }}>
+            <div className="w-[150px]">
               <Select value={statusFilter || 'all'} onValueChange={(val) => setStatusFilter(val === 'all' ? '' : val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Estado" />
@@ -182,34 +167,34 @@ export default function Catalog() {
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingProduct?.id ? "Editar Producto" : "Nuevo Producto"}>
-        <form onSubmit={form.handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '16px' }}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4">
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: 'var(--mt-text-primary)', marginBottom: '8px', fontWeight: 500 }}>SKU</label>
+              <label className="block text-[13px] text-mt-text-primary mb-2 font-medium">SKU</label>
               <Input type="text" placeholder="Ej. PROD-01" {...form.register('sku')} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: 'var(--mt-text-primary)', marginBottom: '8px', fontWeight: 500 }}>Nombre del producto</label>
+              <label className="block text-[13px] text-mt-text-primary mb-2 font-medium">Nombre del producto</label>
               <Input type="text" placeholder="Ej. Monitor 24 pulgadas" {...form.register('name')} />
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: 'var(--mt-text-primary)', marginBottom: '8px', fontWeight: 500 }}>Costo</label>
+              <label className="block text-[13px] text-mt-text-primary mb-2 font-medium">Costo</label>
               <Input type="number" {...form.register('cost')} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: 'var(--mt-text-primary)', marginBottom: '8px', fontWeight: 500 }}>Precio de venta</label>
+              <label className="block text-[13px] text-mt-text-primary mb-2 font-medium">Precio de venta</label>
               <Input type="number" {...form.register('price')} />
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: 'var(--mt-text-primary)', marginBottom: '8px', fontWeight: 500 }}>Categoría</label>
+              <label className="block text-[13px] text-mt-text-primary mb-2 font-medium">Categoría</label>
               <Input type="text" {...form.register('category')} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: 'var(--mt-text-primary)', marginBottom: '8px', fontWeight: 500 }}>Estado</label>
+              <label className="block text-[13px] text-mt-text-primary mb-2 font-medium">Estado</label>
               <Controller
                 name="status"
                 control={form.control}
@@ -228,17 +213,17 @@ export default function Catalog() {
             </div>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '13px', color: 'var(--mt-text-primary)', marginBottom: '8px', fontWeight: 500 }}>Proveedor</label>
+            <label className="block text-[13px] text-mt-text-primary mb-2 font-medium">Proveedor</label>
             <Input type="text" {...form.register('supplier')} />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
+          <div className="flex justify-between items-center mt-4">
             {editingProduct?.id ? (
-              <Button type="button" variant="danger" size="sm" onClick={handleDelete} style={{ gap: '6px' }}>
+              <Button type="button" variant="danger" size="sm" onClick={handleDelete} className="gap-1.5">
                 <Trash2 size={14} /> Eliminar
               </Button>
             ) : <div />}
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div className="flex gap-3">
               <Button type="button" variant="ghost" size="md" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
               <Button type="submit" variant="primary" size="md">Guardar</Button>
             </div>

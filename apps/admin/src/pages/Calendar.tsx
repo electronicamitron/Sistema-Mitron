@@ -82,19 +82,19 @@ export default function Calendar() {
 
   const getEventStyle = (eventType: EventType) => {
     switch (eventType) {
-      case 'pago': return { color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.1)', border: 'rgba(251, 191, 36, 0.2)' };
-      case 'fiscal': return { color: '#fb7185', bg: 'rgba(244, 63, 94, 0.1)', border: 'rgba(244, 63, 94, 0.2)' };
-      case 'inventario': return { color: '#34d399', bg: 'rgba(52, 211, 153, 0.1)', border: 'rgba(52, 211, 153, 0.2)' };
-      default: return { color: '#60a5fa', bg: 'rgba(96, 165, 250, 0.1)', border: 'rgba(96, 165, 250, 0.2)' };
+      case 'pago': return { color: 'text-amber-400', bg: 'bg-amber-400/10', border: 'border-amber-400/20' };
+      case 'fiscal': return { color: 'text-rose-400', bg: 'bg-rose-400/10', border: 'border-rose-400/20' };
+      case 'inventario': return { color: 'text-emerald-400', bg: 'bg-emerald-400/10', border: 'border-emerald-400/20' };
+      default: return { color: 'text-blue-400', bg: 'bg-blue-400/10', border: 'border-blue-400/20' };
     }
   };
 
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <div className="mt-page-header" style={{ marginBottom: 0, alignItems: 'center' }}>
+    <div className="animate-fade-in flex flex-col gap-6">
+      <div className="mt-page-header mb-0 items-center">
         <div>
-          <h1 className="mt-page-title" style={{ fontSize: '28px', letterSpacing: '-0.8px', marginBottom: '4px' }}>Calendario</h1>
-          <p className="mt-page-subtitle" style={{ fontSize: '14px', color: 'var(--mt-text-secondary)' }}>Eventos, pagos y fechas clave.</p>
+          <h1 className="mt-page-title text-[28px] tracking-tight mb-1">Calendario</h1>
+          <p className="mt-page-subtitle text-sm text-mt-text-secondary">Eventos, pagos y fechas clave.</p>
         </div>
         <button 
           onClick={() => { 
@@ -103,52 +103,42 @@ export default function Calendar() {
             form.reset({ title: '', type: 'operativo', description: '', date: d.toISOString().split('T')[0] });
             setIsEventModalOpen(true); 
           }}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '8px', 
-            backgroundColor: '#FFFFFF', border: 'none', 
-            padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', 
-            color: '#000000', transition: 'all 0.2s', fontWeight: 600
-          }}
-          onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'} 
-          onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+          className="flex items-center gap-2 bg-white border-none px-4 py-2.5 rounded-lg cursor-pointer text-black transition-all font-semibold hover:-translate-y-[1px]"
         >
           <Plus size={16} />
-          <span style={{ fontSize: '14px' }}>Nuevo Evento</span>
+          <span className="text-sm">Nuevo Evento</span>
         </button>
       </div>
 
-      <div className="mt-panel" style={{ borderRadius: '12px', border: '1px solid var(--mt-border)', backgroundColor: 'var(--mt-surface)', padding: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <CalendarIcon size={24} style={{ color: 'var(--mt-text-primary)' }} />
-            <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--mt-text-primary)', margin: 0, letterSpacing: '-0.5px' }}>{currentMonthStr}</h2>
+      <div className="mt-panel rounded-xl border border-mt-border bg-mt-surface p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <CalendarIcon size={24} className="text-mt-text-primary" />
+            <h2 className="text-xl font-semibold text-mt-text-primary m-0 tracking-tight">{currentMonthStr}</h2>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'var(--mt-surface-subtle)', padding: '4px', borderRadius: '8px', border: '1px solid var(--mt-border)' }}>
+          <div className="flex items-center gap-2 bg-mt-surface-subtle p-1 rounded-lg border border-mt-border">
             <button 
               onClick={handlePrevMonth}
-              style={{ background: 'transparent', border: 'none', color: 'var(--mt-text-secondary)', cursor: 'pointer', padding: '6px', borderRadius: '4px' }}
-              onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--mt-surface)'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
+              className="bg-transparent border-none text-mt-text-secondary cursor-pointer p-1.5 rounded hover:bg-mt-surface transition-colors"
             ><ChevronLeft size={18} /></button>
             <button 
               onClick={handleToday}
-              style={{ background: 'transparent', border: 'none', color: 'var(--mt-text-primary)', cursor: 'pointer', padding: '6px 12px', fontSize: '13px', fontWeight: 600, borderRadius: '4px' }}
-              onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--mt-surface)'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
+              className="bg-transparent border-none text-mt-text-primary cursor-pointer px-3 py-1.5 text-[13px] font-semibold rounded hover:bg-mt-surface transition-colors"
             >Hoy</button>
             <button 
               onClick={handleNextMonth}
-              style={{ background: 'transparent', border: 'none', color: 'var(--mt-text-secondary)', cursor: 'pointer', padding: '6px', borderRadius: '4px' }}
-              onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--mt-surface)'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
+              className="bg-transparent border-none text-mt-text-secondary cursor-pointer p-1.5 rounded hover:bg-mt-surface transition-colors"
             ><ChevronRight size={18} /></button>
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', backgroundColor: 'var(--mt-border-subtle)', border: '1px solid var(--mt-border-subtle)', borderRadius: '12px', overflow: 'hidden' }}>
+        <div className="grid grid-cols-7 gap-[1px] bg-mt-border-subtle border border-mt-border-subtle rounded-xl overflow-hidden">
           {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(d => (
-            <div key={d} style={{ padding: '12px 8px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: 'var(--mt-text-secondary)', backgroundColor: 'var(--mt-surface-subtle)' }}>{d}</div>
+            <div key={d} className="px-2 py-3 text-center text-xs font-semibold text-mt-text-secondary bg-mt-surface-subtle">{d}</div>
           ))}
           
           {Array.from({ length: firstDay }).map((_, i) => (
-            <div key={`blank-${i}`} style={{ backgroundColor: 'var(--mt-bg)', opacity: 0.3, minHeight: '120px' }}></div>
+            <div key={`blank-${i}`} className="bg-mt-bg opacity-30 min-h-[120px]"></div>
           ))}
 
           {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -161,24 +151,11 @@ export default function Calendar() {
               <div 
                 key={day} 
                 onClick={() => handleDayClick(day)} 
-                style={{ 
-                  padding: '12px', minHeight: '120px', 
-                  backgroundColor: isToday ? 'rgba(59, 130, 246, 0.05)' : 'var(--mt-surface)', 
-                  cursor: 'pointer', transition: 'background-color 0.2s ease',
-                  position: 'relative',
-                  borderTop: isToday ? '2px solid #60a5fa' : 'none'
-                }} 
-                onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--mt-surface-hover)'} 
-                onMouseOut={e => e.currentTarget.style.backgroundColor = isToday ? 'rgba(59, 130, 246, 0.05)' : 'var(--mt-surface)'}
+                className={`p-3 min-h-[120px] cursor-pointer transition-colors relative group border-t-2 ${isToday ? 'bg-blue-500/5 border-blue-400 hover:bg-blue-500/10' : 'bg-mt-surface border-transparent hover:bg-mt-surface-hover'}`}
               >
-                <div style={{ 
-                  fontSize: '13px', fontWeight: isToday ? 700 : 500, 
-                  color: isToday ? '#60a5fa' : 'var(--mt-text-secondary)', 
-                  marginBottom: '12px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: '24px', height: '24px', borderRadius: '50%',
-                  backgroundColor: isToday ? 'rgba(96, 165, 250, 0.1)' : 'transparent'
-                }}>{day}</div>
+                <div className={`text-[13px] mb-3 flex items-center justify-center w-6 h-6 rounded-full ${isToday ? 'font-bold text-blue-400 bg-blue-400/10' : 'font-medium text-mt-text-secondary'}`}>
+                  {day}
+                </div>
                 
                 {dayEvents.slice(0, 3).map(ev => {
                   const style = getEventStyle(ev.type);
@@ -186,24 +163,17 @@ export default function Calendar() {
                     <div 
                       key={ev.id}
                       onClick={(e) => handleEditEvent(e, ev)}
-                      style={{ 
-                        fontSize: '11px', padding: '6px 8px', 
-                        backgroundColor: style.bg, color: style.color, 
-                        borderRadius: '6px', border: `1px solid ${style.border}`, 
-                        marginBottom: '4px', fontWeight: 500, lineHeight: 1.2,
-                        display: 'flex', flexDirection: 'column', gap: '2px',
-                        overflow: 'hidden'
-                      }}
+                      className={`text-[11px] px-2 py-1.5 rounded-md border mb-1 font-medium leading-tight flex flex-col gap-0.5 overflow-hidden ${style.bg} ${style.color} ${style.border}`}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' }}>
-                        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{ev.title}</span>
-                        {ev.isMock && <span style={{ fontSize: '9px', backgroundColor: 'rgba(0,0,0,0.1)', padding: '1px 4px', borderRadius: '4px', flexShrink: 0 }}>DEMO</span>}
+                      <div className="flex justify-between items-center gap-1">
+                        <span className="whitespace-nowrap overflow-hidden text-ellipsis flex-1">{ev.title}</span>
+                        {ev.isMock && <span className="text-[9px] bg-black/10 px-1 py-0.5 rounded shrink-0">DEMO</span>}
                       </div>
                     </div>
                   );
                 })}
                 {dayEvents.length > 3 && (
-                  <div style={{ fontSize: '11px', color: 'var(--mt-text-secondary)', textAlign: 'center', marginTop: '4px', fontWeight: 500 }}>
+                  <div className="text-[11px] text-mt-text-secondary text-center mt-1 font-medium">
                     +{dayEvents.length - 3} más
                   </div>
                 )}
@@ -214,14 +184,14 @@ export default function Calendar() {
       </div>
 
       <Modal isOpen={isEventModalOpen} onClose={() => setIsEventModalOpen(false)} title={editingId ? "Editar Evento" : "Nuevo Evento"}>
-        <form onSubmit={form.handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
           <div>
-            <label style={{ display: 'block', fontSize: '13px', color: 'var(--mt-text-primary)', marginBottom: '8px', fontWeight: 500 }}>Título del evento</label>
+            <label className="block text-[13px] text-mt-text-primary mb-2 font-medium">Título del evento</label>
             <Input type="text" placeholder="Ej. Revisión de inventario" {...form.register('title')} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: 'var(--mt-text-primary)', marginBottom: '8px', fontWeight: 500 }}>Fecha</label>
+              <label className="block text-[13px] text-mt-text-primary mb-2 font-medium">Fecha</label>
               <Input 
                 type="date"
                 {...form.register('date')}
@@ -233,7 +203,7 @@ export default function Calendar() {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: 'var(--mt-text-primary)', marginBottom: '8px', fontWeight: 500 }}>Categoría</label>
+              <label className="block text-[13px] text-mt-text-primary mb-2 font-medium">Categoría</label>
               <Controller
                 name="type"
                 control={form.control}
@@ -254,16 +224,16 @@ export default function Calendar() {
             </div>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '13px', color: 'var(--mt-text-primary)', marginBottom: '8px', fontWeight: 500 }}>Descripción (Opcional)</label>
+            <label className="block text-[13px] text-mt-text-primary mb-2 font-medium">Descripción (Opcional)</label>
             <Input type="text" placeholder="Detalles adicionales" {...form.register('description')} />
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px' }}>
+          <div className="flex justify-between items-center mt-6">
             {editingId ? (
-              <Button type="button" variant="danger" size="sm" onClick={handleDelete} style={{ gap: '6px' }}>
+              <Button type="button" variant="danger" size="sm" onClick={handleDelete} className="gap-1.5">
                 <Trash2 size={14} /> Eliminar
               </Button>
             ) : <div />}
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div className="flex gap-3">
               <Button type="button" variant="ghost" size="md" onClick={() => setIsEventModalOpen(false)}>Cancelar</Button>
               <Button type="submit" variant="primary" size="md">Guardar</Button>
             </div>
