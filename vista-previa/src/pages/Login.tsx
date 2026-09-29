@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, LogIn, Cpu } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -14,6 +13,7 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
 
+    // Mantenemos la validación temporal que pediste antes
     if (email !== 'mitron' || password !== '12345') {
       alert('Credenciales incorrectas');
       setIsLoading(false);
@@ -31,128 +31,100 @@ export default function Login() {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: 'var(--mt-bg)',
+      background: 'linear-gradient(to bottom, #1C2D54, #4B6082)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: '16px',
       position: 'relative',
       overflow: 'hidden',
-      boxSizing: 'border-box'
+      boxSizing: 'border-box',
+      fontFamily: "'Inter', sans-serif"
     }}>
-      {/* Background decorations */}
-      <div style={{
-        position: 'absolute', top: '-10%', left: '-10%', width: '40%', height: '40%',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)', borderRadius: '50%', filter: 'blur(100px)'
-      }} />
-      <div style={{
-        position: 'absolute', bottom: '-10%', right: '-10%', width: '40%', height: '40%',
-        backgroundColor: 'rgba(168, 85, 247, 0.1)', borderRadius: '50%', filter: 'blur(100px)'
-      }} />
-
       <div style={{
         width: '100%',
-        maxWidth: '400px',
-        backgroundColor: 'var(--mt-surface)',
-        border: '1px solid var(--mt-border)',
+        maxWidth: '420px',
+        backgroundColor: '#FFFFFF',
         borderRadius: '16px',
-        padding: '32px',
+        padding: '48px 40px',
         position: 'relative',
         zIndex: 10,
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         boxSizing: 'border-box'
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '32px' }}>
-          <div style={{
-            width: '64px', height: '64px', backgroundColor: 'var(--mt-surface-subtle)',
-            borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: '16px', border: '1px solid var(--mt-border)'
-          }}>
-            <Cpu size={32} color="var(--mt-text-primary)" />
-          </div>
-          <h1 style={{ color: 'var(--mt-text-primary)', fontSize: '24px', fontWeight: 'bold', margin: '0 0 8px 0' }}>
-            Sistema Mitron
+          <img 
+            src="/logo.png" 
+            alt="Electrónica Mitron Audiovisión" 
+            style={{ height: '80px', objectFit: 'contain', marginBottom: '24px' }} 
+          />
+          <h1 style={{ color: '#0F172A', fontSize: '26px', fontWeight: 'bold', margin: '0 0 8px 0' }}>
+            Iniciar sesión
           </h1>
-          <p style={{ color: 'var(--mt-text-secondary)', fontSize: '14px', margin: 0, textAlign: 'center' }}>
-            Ingresa tus credenciales para acceder al panel
+          <p style={{ color: '#64748B', fontSize: '14px', margin: 0, textAlign: 'center' }}>
+            Accede a Sistema Mitron.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ color: 'var(--mt-text-muted)', fontSize: '13px', fontWeight: 500 }}>
-              Usuario
+            <label style={{ color: '#475569', fontSize: '13px', fontWeight: 700 }}>
+              Correo
             </label>
-            <div style={{ position: 'relative' }}>
-              <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', display: 'flex' }}>
-                <Mail size={18} color="var(--mt-text-secondary)" />
-              </div>
-              <input
-                type="text"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="mitron"
-                style={{
-                  width: '100%', padding: '10px 12px 10px 38px', backgroundColor: 'var(--mt-surface-subtle)',
-                  border: '1px solid var(--mt-border)', borderRadius: '8px', color: 'var(--mt-text-primary)',
-                  fontSize: '14px', outline: 'none', boxSizing: 'border-box'
-                }}
-              />
-            </div>
+            <input
+              type="text"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="ulises@mitron.mx"
+              style={{
+                width: '100%', padding: '12px 14px', backgroundColor: '#FFFFFF',
+                border: '1px solid #E2E8F0', borderRadius: '8px', color: '#0F172A',
+                fontSize: '14px', outline: 'none', boxSizing: 'border-box'
+              }}
+            />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ color: 'var(--mt-text-muted)', fontSize: '13px', fontWeight: 500 }}>
+            <label style={{ color: '#475569', fontSize: '13px', fontWeight: 700 }}>
               Contraseña
             </label>
-            <div style={{ position: 'relative' }}>
-              <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', display: 'flex' }}>
-                <Lock size={18} color="var(--mt-text-secondary)" />
-              </div>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                style={{
-                  width: '100%', padding: '10px 12px 10px 38px', backgroundColor: 'var(--mt-surface-subtle)',
-                  border: '1px solid var(--mt-border)', borderRadius: '8px', color: 'var(--mt-text-primary)',
-                  fontSize: '14px', outline: 'none', boxSizing: 'border-box'
-                }}
-              />
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--mt-text-secondary)', cursor: 'pointer' }}>
-              <input type="checkbox" style={{ accentColor: '#3B82F6' }} />
-              Recordarme
-            </label>
-            <a href="#" style={{ color: 'var(--mt-text-primary)', textDecoration: 'none' }}>
-              ¿Olvidaste tu contraseña?
-            </a>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="........."
+              style={{
+                width: '100%', padding: '12px 14px', backgroundColor: '#FFFFFF',
+                border: '1px solid #E2E8F0', borderRadius: '8px', color: '#0F172A',
+                fontSize: '14px', outline: 'none', boxSizing: 'border-box', letterSpacing: '2px'
+              }}
+            />
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
             style={{
-              marginTop: '8px', width: '100%', padding: '12px', backgroundColor: 'var(--mt-text-primary)',
-              color: 'var(--mt-bg)', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: isLoading ? 'wait' : 'pointer'
+              marginTop: '12px', width: '100%', padding: '14px', backgroundColor: '#0F172A',
+              color: '#FFFFFF', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: isLoading ? 'wait' : 'pointer',
+              transition: 'background-color 0.2s'
             }}
           >
             {isLoading ? (
-              <span style={{ display: 'inline-block', width: '18px', height: '18px', border: '2px solid rgba(0,0,0,0.1)', borderTopColor: 'var(--mt-bg)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <span style={{ display: 'inline-block', width: '18px', height: '18px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#FFFFFF', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
             ) : (
-              <>
-                <LogIn size={18} />
-                Iniciar Sesión
-              </>
+              'Iniciar sesión'
             )}
           </button>
+          
+          <div style={{ textAlign: 'center', marginTop: '16px' }}>
+            <a href="#" style={{ color: '#334155', textDecoration: 'none', fontSize: '13px', fontWeight: 600 }}>
+              ¿Olvidaste tu contraseña?
+            </a>
+          </div>
         </form>
       </div>
       <style>
@@ -161,7 +133,11 @@ export default function Login() {
             to { transform: rotate(360deg); }
           }
           input:focus {
-            border-color: var(--mt-text-primary) !important;
+            border-color: #94A3B8 !important;
+            box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.1);
+          }
+          button:hover:not(:disabled) {
+            background-color: #1E293B !important;
           }
         `}
       </style>
