@@ -1,0 +1,20 @@
+# Dependencias
+node_modules/
+
+# Compilación
+dist/
+build/
+.next/
+.turbo/
+
+
+# Archivos temporales
+.DS_Store
+*.log
+.env
+.env.local
+
+# Documentos locales de prueba
+*.xml
+*.txt
+*.zip

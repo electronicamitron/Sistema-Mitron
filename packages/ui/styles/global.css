@@ -1,0 +1,10 @@
+/* Referencia para centralizar tokens en packages/ui. No importar dos veces ni sobrescribir el CSS actual sin compararlo. */
+:root {
+  --mitron-bg: #111315;
+  --mitron-surface: #292c2d;
+  --mitron-text: #ffffff;
+  --mitron-text-secondary: #aeafb1;
+  --mitron-text-muted: #676767;
+  --mitron-border: #3a3e40;
+  --mitron-font: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}

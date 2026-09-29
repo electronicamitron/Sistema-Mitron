@@ -1,0 +1,15 @@
+{
+  "name": "sistema-mitron",
+  "private": true,
+  "scripts": {
+    "dev:admin": "turbo run dev --filter=@mitron/admin",
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "turbo": "^2.11.5"
+  },
+  "packageManager": "pnpm@10.10.0"
+}
