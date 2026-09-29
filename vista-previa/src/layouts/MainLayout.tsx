@@ -59,7 +59,7 @@ export default function MainLayout() {
             <Settings size={16} />
             Ajustes
           </button>
-          <button className="mt-nav-item" onClick={logout} style={{ color: '#F87171' }}>
+          <button className="mt-nav-item" onClick={logout} style={{ color: 'var(--mt-text-secondary)' }}>
             <LogOut size={16} />
             Cerrar Sesión
           </button>
@@ -74,19 +74,24 @@ export default function MainLayout() {
       </aside>
 
       <main className="mt-main">
-        <header className="mt-header">
+        <header className="mt-header" style={{ position: 'relative' }}>
           <div className="mt-breadcrumbs">
             <span>Sistema Mitron</span>
             <span>/</span>
             <span className="mt-breadcrumb-current">{getPageTitle()}</span>
           </div>
+
+          <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center' }}>
+            <img src="/logo.png" alt="Electrónica Mitron Audiovisión" style={{ height: '36px', objectFit: 'contain' }} />
+          </div>
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', position: 'relative' }}>
             <button 
               onClick={() => setIsNotifOpen(!isNotifOpen)}
-              style={{ background: 'transparent', border: 'none', color: 'var(--mt-text-secondary)', cursor: 'pointer', position: 'relative' }}
+              style={{ background: 'transparent', border: 'none', color: 'var(--mt-text-secondary)', cursor: 'pointer', position: 'relative', transition: 'color 0.2s' }}
             >
               <Bell size={20} />
-              <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, backgroundColor: '#F87171', borderRadius: '50%' }}></span>
+              <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, backgroundColor: 'var(--mt-warning-text)', borderRadius: '50%' }}></span>
             </button>
             <div className="mt-user-avatar"><User size={14} /></div>
             <NotificationPanel isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
