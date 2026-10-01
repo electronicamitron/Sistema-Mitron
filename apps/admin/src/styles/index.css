@@ -201,18 +201,35 @@ body, html {
   color: var(--mt-text-secondary);
 }
 
-/* Main Area */
 .mt-main {
   flex: 1;
   min-width: 0;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
   overflow-x: hidden;
   background-color: var(--mt-bg);
+}
+
+/* Global scrollbar styles */
+* {
   scrollbar-width: thin;
   scrollbar-color: var(--mt-border) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--mt-border);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--mt-border-hover);
 }
 
 .mt-header {

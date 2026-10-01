@@ -5,28 +5,30 @@ import { NotificationPanel } from '../components/domain/NotificationPanel';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 
+
 export default function MainLayout() {
   const location = useLocation();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const { logout } = useAuth();
-  const { notifications, products } = useData();
+  const { notifications } = useData();
   
   const unreadNotifs = notifications.filter(n => !n.read).length;
-  const inventoryAlerts = products.filter(p => (p.stock !== null && p.stock <= p.minStock) || p.stock === null).length;
+
 
   const getPageTitle = () => {
     if (location.pathname.includes('dashboard')) return 'Dashboard';
     if (location.pathname.includes('administration')) return 'Administración';
     if (location.pathname.includes('inventory')) return 'Inventario';
     if (location.pathname.includes('catalog')) return 'Catálogo';
+    if (location.pathname.includes('pricing')) return 'Precios';
     if (location.pathname.includes('calendar')) return 'Calendario';
     return '';
   };
 
-  const navItems = [
+  const navItems: Array<{ to: string, icon: React.ReactNode, label: string, badge?: string }> = [
     { to: '/dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
     { to: '/administration', icon: <Briefcase size={18} />, label: 'Administración' },
-    { to: '/inventory', icon: <Package size={18} />, label: 'Inventario', badge: inventoryAlerts > 0 ? inventoryAlerts.toString() : undefined },
+    { to: '/inventory', icon: <Package size={18} />, label: 'Inventario' },
     { to: '/catalog', icon: <List size={18} />, label: 'Catálogo' },
     { to: '/calendar', icon: <CalendarIcon size={18} />, label: 'Calendario' },
   ];

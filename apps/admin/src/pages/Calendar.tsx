@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getLocalYYYYMMDD } from '../lib/utils';
 import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Trash2 } from 'lucide-react';
 import { Modal, Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@mitron/ui';
 import { useData, type AppEvent, type EventType } from '../context/DataContext';
@@ -15,7 +16,19 @@ const eventSchema = z.object({
 type EventFormValues = z.infer<typeof eventSchema>;
 
 export default function Calendar() {
-  const { events, addEvent, updateEvent, deleteEvent, addNotification } = useData();
+  const { events, setEvents, addNotification } = useData();
+
+  const addEvent = (event: Omit<AppEvent, 'id'>) => {
+    setEvents(prev => [...prev, { ...event, id: Date.now().toString() }]);
+  };
+
+  const updateEvent = (id: string, event: Partial<AppEvent>) => {
+    setEvents(prev => prev.map(e => e.id === id ? { ...e, ...event } : e));
+  };
+
+  const deleteEvent = (id: string) => {
+    setEvents(prev => prev.filter(e => e.id !== id));
+  };
   const [currentDate, setCurrentDate] = useState(() => new Date());
   
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
@@ -36,7 +49,7 @@ export default function Calendar() {
   const handleDayClick = (day: number) => {
     setEditingId(null);
     const d = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    form.reset({ title: '', type: 'operativo', description: '', date: d.toISOString().split('T')[0] });
+    form.reset({ title: '', type: 'operativo', description: '', date: getLocalYYYYMMDD(d) });
     setIsEventModalOpen(true);
   };
 
@@ -76,7 +89,7 @@ export default function Calendar() {
   const firstDay = getFirstDayOfMonth(currentDate.getFullYear(), currentDate.getMonth());
 
   const getEventsForDay = (day: number, month: number, year: number) => {
-    const dateStr = new Date(year, month, day, 12).toISOString().split('T')[0];
+    const dateStr = getLocalYYYYMMDD(new Date(year, month, day));
     return events.filter(e => e.date === dateStr);
   };
 
@@ -100,7 +113,7 @@ export default function Calendar() {
           onClick={() => { 
             const d = new Date();
             setEditingId(null);
-            form.reset({ title: '', type: 'operativo', description: '', date: d.toISOString().split('T')[0] });
+            form.reset({ title: '', type: 'operativo', description: '', date: getLocalYYYYMMDD(d) });
             setIsEventModalOpen(true); 
           }}
           className="flex items-center gap-2 bg-white border-none px-4 py-2.5 rounded-lg cursor-pointer text-black transition-all font-semibold hover:-translate-y-[1px]"
@@ -132,7 +145,8 @@ export default function Calendar() {
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-[1px] bg-mt-border-subtle border border-mt-border-subtle rounded-xl overflow-hidden">
+        <div className="overflow-x-auto pb-2">
+          <div className="grid grid-cols-7 gap-[1px] bg-mt-border-subtle border border-mt-border-subtle rounded-xl overflow-hidden min-w-[700px]">
           {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(d => (
             <div key={d} className="px-2 py-3 text-center text-xs font-semibold text-mt-text-secondary bg-mt-surface-subtle">{d}</div>
           ))}
@@ -165,9 +179,8 @@ export default function Calendar() {
                       onClick={(e) => handleEditEvent(e, ev)}
                       className={`text-[11px] px-2 py-1.5 rounded-md border mb-1 font-medium leading-tight flex flex-col gap-0.5 overflow-hidden ${style.bg} ${style.color} ${style.border}`}
                     >
-                      <div className="flex justify-between items-center gap-1">
-                        <span className="whitespace-nowrap overflow-hidden text-ellipsis flex-1">{ev.title}</span>
-                        {ev.isMock && <span className="text-[9px] bg-black/10 px-1 py-0.5 rounded shrink-0">DEMO</span>}
+                      <div className="flex justify-between items-start gap-1 flex-wrap">
+                        <span className="flex-1 break-words">{ev.title}</span>
                       </div>
                     </div>
                   );
@@ -180,6 +193,7 @@ export default function Calendar() {
               </div>
             );
           })}
+        </div>
         </div>
       </div>
 
