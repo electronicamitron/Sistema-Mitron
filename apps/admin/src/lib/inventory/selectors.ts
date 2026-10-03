@@ -11,10 +11,10 @@ export const getDisplayedStock = (rawStock: number): number => {
   return Math.max(0, rawStock);
 };
 
-export type InventoryStatus = 'SIN EXISTENCIAS' | 'STOCK BAJO' | 'DISPONIBLE' | 'SIN HISTORIAL DE COMPRA';
+export type InventoryStatus = 'SIN EXISTENCIAS' | 'STOCK BAJO' | 'DISPONIBLE' | 'SIN HISTORIAL';
 
 export const getInventoryStatus = (rawStock: number, hasPurchaseHistory: boolean): InventoryStatus => {
-  if (!hasPurchaseHistory) return 'SIN HISTORIAL DE COMPRA';
+  if (!hasPurchaseHistory) return 'SIN HISTORIAL';
   if (rawStock <= 0) return 'SIN EXISTENCIAS';
   if (rawStock > 0 && rawStock < 3) return 'STOCK BAJO';
   return 'DISPONIBLE';

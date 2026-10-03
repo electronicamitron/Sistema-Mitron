@@ -5,6 +5,7 @@ import Administration from './pages/Administration';
 import Inventory from './pages/Inventory';
 import Catalog from './pages/Catalog';
 import Calendar from './pages/Calendar';
+import CRM from './pages/CRM';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
@@ -38,6 +39,7 @@ function App() {
             <Route path="administration" element={<Administration />} />
             <Route path="inventory" element={<Inventory />} />
             <Route path="catalog" element={<Catalog />} />
+            <Route path="crm" element={<CRM />} />
             <Route path="calendar" element={<Calendar />} />
           </Route>
         </Routes>

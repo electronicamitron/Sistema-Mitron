@@ -1,3 +1,12 @@
+export type CostType = 'MERCHANDISE' | 'PURCHASE_DIRECT_COST' | 'OPERATING_EXPENSE' | 'OTHER_NON_STOCK';
+
+export interface PurchaseLineTax {
+  tax: string; // IVA, ISR, etc.
+  type: 'traslado' | 'retencion';
+  rate: number;
+  amount: number;
+}
+
 export interface PurchaseLine {
   id: string;
   documentId: string;
@@ -9,6 +18,18 @@ export interface PurchaseLine {
   unitCost: number;
   amount: number;
   stockable: boolean;
+  costType?: CostType;
+  taxes?: PurchaseLineTax[];
+}
+
+export type PaymentStatus = 'PENDIENTE' | 'PARCIAL' | 'PAGADA' | 'VENCIDA';
+
+export interface PaymentRecord {
+  id: string;
+  invoiceId: string;
+  amount: number;
+  date: string;
+  reference?: string;
 }
 
 export interface PurchaseDocument {
@@ -27,4 +48,9 @@ export interface PurchaseDocument {
   xmlFileRef?: string;
   pdfFileRef?: string;
   importedAt: string;
+  // Raw XML for download
+  rawXml?: string;
+  // Accounts payable fields
+  dueDate?: string;
+  payments?: PaymentRecord[];
 }

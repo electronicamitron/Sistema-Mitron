@@ -1,17 +1,17 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, Package, List, Calendar as CalendarIcon, Bell, Settings, LogOut, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Package, List, Users, Calendar as CalendarIcon, Bell, Settings, LogOut, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { NotificationPanel } from '../components/domain/NotificationPanel';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
-
+import { Onboarding } from '../components/ui/Onboarding';
+import { HelpCircle } from 'lucide-react';
 
 export default function MainLayout() {
   const location = useLocation();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const { logout } = useAuth();
   const { notifications } = useData();
-  
   const unreadNotifs = notifications.filter(n => !n.read).length;
 
 
@@ -20,6 +20,7 @@ export default function MainLayout() {
     if (location.pathname.includes('administration')) return 'Administración';
     if (location.pathname.includes('inventory')) return 'Inventario';
     if (location.pathname.includes('catalog')) return 'Catálogo';
+    if (location.pathname.includes('crm')) return 'CRM';
     if (location.pathname.includes('pricing')) return 'Precios';
     if (location.pathname.includes('calendar')) return 'Calendario';
     return '';
@@ -30,6 +31,7 @@ export default function MainLayout() {
     { to: '/administration', icon: <Briefcase size={18} />, label: 'Administración' },
     { to: '/inventory', icon: <Package size={18} />, label: 'Inventario' },
     { to: '/catalog', icon: <List size={18} />, label: 'Catálogo' },
+    { to: '/crm', icon: <Users size={18} />, label: 'CRM' },
     { to: '/calendar', icon: <CalendarIcon size={18} />, label: 'Calendario' },
   ];
 
@@ -53,6 +55,7 @@ export default function MainLayout() {
               <NavLink 
                 key={item.to}
                 to={item.to} 
+                id={`tour-nav-${item.to.replace('/', '')}`}
                 className={({ isActive }) => 
                   `flex items-center gap-3 px-3 py-2.5 rounded-lg no-underline transition-colors ${isActive ? 'bg-mt-surface-subtle text-mt-text-primary font-semibold' : 'bg-transparent text-mt-text-secondary font-medium hover:bg-mt-surface-subtle/50'}`
                 }
@@ -77,6 +80,13 @@ export default function MainLayout() {
             >
               <Settings size={18} />
               Ajustes
+            </button>
+            <button 
+              onClick={() => window.dispatchEvent(new Event('trigger-onboarding'))}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-mt-text-secondary bg-transparent border-none cursor-pointer font-medium text-sm transition-colors hover:bg-mt-surface-subtle"
+            >
+              <HelpCircle size={18} />
+              Repetir recorrido
             </button>
             <button 
               onClick={logout} 
@@ -125,6 +135,7 @@ export default function MainLayout() {
           <Outlet />
         </div>
       </main>
+      <Onboarding />
     </div>
   );
 }

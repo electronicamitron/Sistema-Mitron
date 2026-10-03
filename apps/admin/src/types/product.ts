@@ -10,4 +10,9 @@ export interface Product {
   lastPurchaseAt: string | null;
   hasPurchaseHistory: boolean;
   sources: ('XML' | 'TXT')[];
+  // New classification fields – all optional for retrocompatibility
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+  brandId?: string | null;
+  tags?: string[];
 }

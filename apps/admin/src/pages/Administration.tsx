@@ -1,41 +1,62 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Button, Modal } from '@mitron/ui';
+import { Button, Modal, Input } from '@mitron/ui';
 import { DataTable } from '../components/ui/DataTable';
 import { SupplierDrawer } from '../components/domain/SupplierDrawer';
 import { InvoiceDrawer } from '../components/domain/InvoiceDrawer';
-import { Upload, UserRound, FileText, CheckCircle, FileSearch, Trash2, Download } from 'lucide-react';
+import { IncomeDrawer } from '../components/domain/IncomeDrawer';
+import { Upload, FileText, CheckCircle, FileSearch, CreditCard, Pencil, UserRound } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import type { ColumnDef, CellContext } from '@tanstack/react-table';
+import type { PaymentStatus, PaymentRecord } from '../types/purchase';
 import Precios from './Precios';
 import { parseCfdi, parseSalesReport } from '../lib/parsers';
-import { formatDateHuman } from '../lib/utils';
+import { formatDateHuman, formatPeriod } from '../lib/utils';
+import type { SalesReport } from '../types/sales';
 
 export default function Administration() {
-  const { incomes, expenses, addIncome, deleteIncome, addExpense, deleteExpense, addNotification, suppliers } = useData();
+  const { incomes, expenses, addIncome, deleteIncome, addExpense, deleteExpense, updateExpense, addNotification, suppliers, updateSupplier } = useData();
   const location = useLocation();
   const navigate = useNavigate();
   
-  const [activeTab, setActiveTab] = useState<'ingresos' | 'gastos' | 'proveedores' | 'precios'>('ingresos');
+  const [activeTab, setActiveTab] = useState<'ingresos' | 'gastos' | 'proveedores' | 'precios' | 'cuentas'>('ingresos');
   
   useEffect(() => {
     if (location.state?.tab) {
       setActiveTab(location.state.tab as any);
-      // Clean up state so we don't keep returning to the same tab on refresh
       navigate(location.pathname, { replace: true, state: { ...location.state, tab: undefined } });
     }
   }, [location, navigate]);
+
   const [isSupplierOpen, setIsSupplierOpen] = useState(false);
   const [selectedSupplierRfc, setSelectedSupplierRfc] = useState<string>('');
   
   const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   
+  const [isIncomeOpen, setIsIncomeOpen] = useState(false);
+  const [selectedIncome, setSelectedIncome] = useState<SalesReport | null>(null);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Preview State
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewData, setPreviewData] = useState<any>(null);
+
+  // Payment modal
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentInvoiceId, setPaymentInvoiceId] = useState<string>('');
+  const [paymentAmount, setPaymentAmount] = useState<number>(0);
+  const [paymentDate, setPaymentDate] = useState<string>('');
+  const [paymentReference, setPaymentReference] = useState<string>('');
+
+  // Supplier edit modal
+  const [supplierEditOpen, setSupplierEditOpen] = useState(false);
+  const [editSupplierRfc, setEditSupplierRfc] = useState<string>('');
+  const [editContactName, setEditContactName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editLeadTime, setEditLeadTime] = useState<number>(0);
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(val);
@@ -44,9 +65,10 @@ export default function Administration() {
   const renderTabs = () => {
     const tabs = [
       { id: 'ingresos', label: 'Ingresos' },
-      { id: 'gastos', label: 'Gastos' },
+      { id: 'gastos', label: 'Compras y gastos' },
       { id: 'proveedores', label: 'Proveedores' },
-      { id: 'precios', label: 'Precios' }
+      { id: 'precios', label: 'Precios' },
+      { id: 'cuentas', label: 'Cuentas por pagar' },
     ] as const;
 
     return (
@@ -67,7 +89,6 @@ export default function Administration() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
-    // Accept one required file and one optional PDF if selected together
     const files = Array.from(e.target.files);
     let xmlFile = files.find(f => f.name.endsWith('.xml'));
     let txtFile = files.find(f => f.name.endsWith('.txt') || f.name.endsWith('.csv'));
@@ -88,7 +109,7 @@ export default function Administration() {
           type: 'ingresos',
           filename: txtFile.name,
           fileType: 'Reporte de Ventas (TXT)',
-          period: report.periodStart,
+          period: formatPeriod(report.periodStart, report.periodEnd),
           amount: report.total,
           records: report.lines.length,
           data: report,
@@ -116,7 +137,7 @@ export default function Administration() {
           type: 'gastos',
           filename: xmlFile.name,
           fileType: 'Factura XML CFDI 4.0',
-          period: purchase.date,
+          period: formatDateHuman(purchase.date, true),
           amount: purchase.total,
           records: purchase.lines.length,
           data: purchase,
@@ -152,8 +173,6 @@ export default function Administration() {
 
   const downloadFile = (fileName: string) => {
     if (!fileName) return;
-    // Just mock downloading by opening a new tab to the generic test-data location or show a toast
-    // In a real app we'd trigger a blob download from indexedDB
     addNotification({ title: 'Descarga iniciada', description: `Descargando ${fileName}...`, type: 'info' });
   };
 
@@ -169,8 +188,59 @@ export default function Administration() {
     }
   };
 
+  const openPaymentModal = (invoiceId: string) => {
+    const inv = expenses.find(e => e.id === invoiceId);
+    if (!inv) return;
+    setPaymentInvoiceId(invoiceId);
+    setPaymentAmount(0);
+    setPaymentDate(new Date().toISOString().split('T')[0]);
+    setPaymentReference('');
+    setPaymentModalOpen(true);
+  };
+
+  const savePayment = () => {
+    const inv = expenses.find(e => e.id === paymentInvoiceId);
+    if (!inv) return;
+    
+    const newPayment: PaymentRecord = {
+      id: Date.now().toString(),
+      invoiceId: paymentInvoiceId,
+      amount: paymentAmount,
+      date: paymentDate,
+      reference: paymentReference
+    };
+    
+    updateExpense(paymentInvoiceId, {
+      payments: [...(inv.payments || []), newPayment]
+    });
+    addNotification({ title: 'Pago registrado', description: 'Se guardó el pago correctamente.', type: 'success' });
+    setPaymentModalOpen(false);
+  };
+
+  const openSupplierEdit = (rfc: string) => {
+    const sup = suppliers.find(s => s.rfc === rfc);
+    if (!sup) return;
+    setEditSupplierRfc(rfc);
+    setEditContactName(sup.contactName || '');
+    setEditPhone(sup.phone || '');
+    setEditEmail(sup.email || '');
+    setEditLeadTime(sup.leadTimeDays || 0);
+    setSupplierEditOpen(true);
+  };
+
+  const saveSupplierEdit = () => {
+    updateSupplier(editSupplierRfc, {
+      contactName: editContactName || undefined,
+      phone: editPhone || undefined,
+      email: editEmail || undefined,
+      leadTimeDays: editLeadTime || undefined,
+    });
+    addNotification({ title: 'Proveedor actualizado', description: 'Se guardaron los datos de contacto.', type: 'success' });
+    setSupplierEditOpen(false);
+  };
+
   const incomesColumns: ColumnDef<any, any>[] = useMemo(() => [
-    { accessorKey: 'periodStart', header: 'Período', cell: (info: CellContext<any, any>) => <span className="font-medium">{info.getValue() as string}</span> },
+    { id: 'period', header: 'Período', cell: (info: CellContext<any, any>) => <span className="font-medium">{formatPeriod(info.row.original.periodStart, info.row.original.periodEnd)}</span> },
     { accessorKey: 'txtFileRef', header: 'Reporte', cell: (info: CellContext<any, any>) => <span className="text-mt-text-secondary">{info.getValue() as string}</span> },
     { accessorKey: 'total', header: 'Total', cell: (info: CellContext<any, any>) => <span className="font-medium">{formatCurrency(info.getValue() as number)}</span> },
     { id: 'status', header: 'Estado', cell: () => <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400">PROCESADA</span> },
@@ -178,16 +248,19 @@ export default function Administration() {
       const row = info.row.original;
       return (
         <div className="flex gap-2">
+          <Button variant="secondary" size="sm" onClick={() => { setSelectedIncome(row); setIsIncomeOpen(true); }}>
+            <FileSearch size={14} /> Detalle
+          </Button>
           <Button variant="ghost" size="sm" onClick={() => downloadFile(row.txtFileRef)} title="Descargar TXT">
-            <Download size={14} /> TXT
+            Descargar TXT
           </Button>
           {row.pdfFileRef && (
             <Button variant="ghost" size="sm" onClick={() => downloadFile(row.pdfFileRef)} title="Descargar PDF">
-              <Download size={14} /> PDF
+              Descargar PDF
             </Button>
           )}
           <Button variant="ghost" size="sm" onClick={() => deleteDoc(row.id, 'ingresos')} className="text-rose-400 hover:text-rose-300">
-            <Trash2 size={14} />
+            Eliminar
           </Button>
         </div>
       );
@@ -212,15 +285,14 @@ export default function Administration() {
             <FileSearch size={14} /> Detalle
           </Button>
           <Button variant="ghost" size="sm" onClick={() => downloadFile(row.xmlFileRef)} title="Descargar XML">
-             XML
+             Descargar XML
           </Button>
           {row.pdfFileRef && (
             <Button variant="ghost" size="sm" onClick={() => downloadFile(row.pdfFileRef)} title="Descargar PDF">
-               PDF
             </Button>
           )}
           <Button variant="ghost" size="sm" onClick={() => deleteDoc(row.id, 'gastos')} className="text-rose-400 hover:text-rose-300">
-            <Trash2 size={14} />
+            Eliminar
           </Button>
         </div>
       );
@@ -230,6 +302,10 @@ export default function Administration() {
   const supplierColumns: ColumnDef<any, any>[] = useMemo(() => [
     { accessorKey: 'name', header: 'Proveedor', cell: (info: CellContext<any, any>) => <span className="font-medium">{info.getValue() as string}</span> },
     { accessorKey: 'rfc', header: 'RFC', cell: (info: CellContext<any, any>) => <span className="text-mt-text-secondary">{info.getValue() as string}</span> },
+    { id: 'contactName', header: 'Contacto', cell: (info: CellContext<any, any>) => {
+      const s = info.row.original;
+      return <span className="text-mt-text-secondary text-sm">{s.contactName || '—'}</span>;
+    }},
     { id: 'facturas', header: 'Facturas', cell: (info: CellContext<any, any>) => {
       const supplierExpenses = expenses.filter(e => e.supplierRfc === info.row.original.rfc);
       return <span className="text-mt-text-primary">{supplierExpenses.length}</span>;
@@ -239,17 +315,74 @@ export default function Administration() {
       const total = supplierExpenses.reduce((sum, e) => sum + e.total, 0);
       return <span className="font-medium">{formatCurrency(total)}</span>;
     }},
-    { id: 'lastPurchase', header: 'Última compra', cell: (info: CellContext<any, any>) => {
-      const supplierExpenses = expenses.filter(e => e.supplierRfc === info.row.original.rfc).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      if (supplierExpenses.length === 0) return <span className="text-mt-text-muted">Ninguna</span>;
-      return <span className="text-mt-text-secondary">{formatDateHuman(supplierExpenses[0].date)}</span>;
-    }},
     { id: 'actions', header: 'Acciones', cell: (info: CellContext<any, any>) => (
-      <Button variant="secondary" size="sm" onClick={() => { setSelectedSupplierRfc(info.row.original.rfc); setIsSupplierOpen(true); }} className="flex items-center gap-1.5">
-        <UserRound size={14} /> Ver Ficha
-      </Button>
+      <div className="flex gap-2">
+        <Button variant="secondary" size="sm" onClick={() => { setSelectedSupplierRfc(info.row.original.rfc); setIsSupplierOpen(true); }} className="flex items-center gap-1.5">
+          <UserRound size={14} /> Ficha
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => openSupplierEdit(info.row.original.rfc)} className="flex items-center gap-1.5">
+          <Pencil size={14} />
+        </Button>
+      </div>
     )}
   ], [expenses]);
+
+  // Accounts payable
+  const accountsData = useMemo(() => {
+    return expenses.map(e => {
+      const paid = e.payments?.reduce((acc, p) => acc + p.amount, 0) || 0;
+      const remaining = e.total - paid;
+      
+      let derivedStatus: PaymentStatus = 'PENDIENTE';
+      if (remaining <= 0) derivedStatus = 'PAGADA';
+      else if (e.dueDate && new Date(e.dueDate) < new Date()) derivedStatus = 'VENCIDA';
+      else if (paid > 0) derivedStatus = 'PARCIAL';
+
+      return {
+        ...e,
+        paid,
+        remaining,
+        status: derivedStatus,
+      };
+    });
+  }, [expenses]);
+
+  const accountsColumns: ColumnDef<any, any>[] = useMemo(() => [
+    { accessorKey: 'supplierName', header: 'Proveedor', cell: (info: CellContext<any, any>) => <span className="font-medium text-sm">{info.getValue() as string}</span> },
+    { id: 'invoice', header: 'Factura', cell: (info: CellContext<any, any>) => {
+      const row = info.row.original;
+      return <span className="text-mt-text-secondary text-xs font-mono">{row.serie || ''}{row.folio || ''}</span>;
+    }},
+    { accessorKey: 'date', header: 'Fecha', cell: (info: CellContext<any, any>) => <span className="text-mt-text-secondary text-sm">{formatDateHuman(info.getValue() as string)}</span> },
+    { id: 'dueDate', header: 'Vencimiento', cell: (info: CellContext<any, any>) => {
+      const row = info.row.original;
+      if (!row.dueDate) return <span className="text-mt-text-muted text-sm">Sin vencimiento</span>;
+      const due = new Date(row.dueDate);
+      const isOverdue = due < new Date() && row.remaining > 0;
+      return <span className={`text-sm ${isOverdue ? 'text-rose-400 font-semibold' : 'text-mt-text-secondary'}`}>{formatDateHuman(row.dueDate)}</span>;
+    }},
+    { accessorKey: 'total', header: 'Total', cell: (info: CellContext<any, any>) => <span className="font-medium text-sm">{formatCurrency(info.getValue() as number)}</span> },
+    { id: 'paid', header: 'Pagado', cell: (info: CellContext<any, any>) => <span className="text-emerald-400 text-sm">{formatCurrency(info.row.original.paid)}</span> },
+    { id: 'remaining', header: 'Pendiente', cell: (info: CellContext<any, any>) => {
+      const r = info.row.original.remaining;
+      return <span className={`text-sm font-medium ${r > 0 ? 'text-amber-400' : 'text-mt-text-muted'}`}>{formatCurrency(r)}</span>;
+    }},
+    { id: 'paymentStatus', header: 'Estado', cell: (info: CellContext<any, any>) => {
+      const st = info.row.original.status as PaymentStatus;
+      const colors: Record<PaymentStatus, string> = {
+        'PENDIENTE': 'bg-amber-500/10 text-amber-400',
+        'PARCIAL': 'bg-blue-500/10 text-blue-400',
+        'PAGADA': 'bg-emerald-500/10 text-emerald-400',
+        'VENCIDA': 'bg-rose-500/10 text-rose-400',
+      };
+      return <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${colors[st] || 'bg-mt-surface-subtle text-mt-text-muted'}`}>{st}</span>;
+    }},
+    { id: 'actions', header: 'Acciones', cell: (info: CellContext<any, any>) => (
+      <Button variant="secondary" size="sm" onClick={() => openPaymentModal(info.row.original.id)} className="flex items-center gap-1.5 w-full justify-center">
+        <CreditCard size={14} /> {info.row.original.remaining > 0 ? 'Abonar' : 'Historial'}
+      </Button>
+    )}
+  ], []);
 
   return (
     <div className="animate-fade-in flex flex-col gap-8">
@@ -257,7 +390,7 @@ export default function Administration() {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="mt-page-title text-[28px] tracking-tight mb-1">Administración</h1>
-            <p className="mt-page-subtitle text-sm text-mt-text-secondary">Gestiona los ingresos, gastos y directorio de proveedores.</p>
+            <p className="mt-page-subtitle text-sm text-mt-text-secondary">Gestión financiera, compras, proveedores y precios.</p>
           </div>
           {(activeTab === 'ingresos' || activeTab === 'gastos') && (
             <div className="flex gap-3">
@@ -267,7 +400,7 @@ export default function Administration() {
                 className="flex items-center gap-2 bg-mt-surface-subtle border border-mt-border px-4 py-2.5 rounded-lg cursor-pointer text-mt-text-primary transition-all font-medium hover:bg-mt-surface-hover hover:border-mt-text-muted"
               >
                 <Upload size={16} />
-                <span className="text-sm">{activeTab === 'ingresos' ? 'Importar TXT/PDF' : 'Importar XML/PDF'}</span>
+                <span className="text-sm">{activeTab === 'ingresos' ? 'Importar TXT' : 'Importar XML'}</span>
               </button>
             </div>
           )}
@@ -277,49 +410,24 @@ export default function Administration() {
 
       <div className="animate-fade-in">
         {activeTab === 'ingresos' && (
-          <DataTable 
-            columns={incomesColumns} 
-            data={incomes} 
-            searchKey="txtFileRef" 
-            searchPlaceholder="Buscar por archivo..." 
-          />
+          <DataTable columns={incomesColumns} data={incomes} searchKey="txtFileRef" searchPlaceholder="Buscar por archivo..." />
         )}
-
         {activeTab === 'gastos' && (
-          <DataTable 
-            columns={expensesColumns} 
-            data={expenses} 
-            searchKey="supplierName" 
-            searchPlaceholder="Buscar por proveedor..." 
-          />
+          <DataTable columns={expensesColumns} data={expenses} searchKey="supplierName" searchPlaceholder="Buscar por proveedor..." />
         )}
-
         {activeTab === 'proveedores' && (
-          <DataTable 
-            columns={supplierColumns} 
-            data={suppliers} 
-            searchKey="name" 
-            searchPlaceholder="Buscar proveedor..." 
-          />
+          <DataTable columns={supplierColumns} data={suppliers} searchKey="name" searchPlaceholder="Buscar proveedor..." />
         )}
-
-        {activeTab === 'precios' && (
-          <Precios />
+        {activeTab === 'precios' && <Precios />}
+        {activeTab === 'cuentas' && (
+          <DataTable columns={accountsColumns} data={accountsData} searchKey="supplierName" searchPlaceholder="Buscar por proveedor..." />
         )}
       </div>
 
-      <SupplierDrawer 
-        isOpen={isSupplierOpen} 
-        onClose={() => setIsSupplierOpen(false)} 
-        rfc={selectedSupplierRfc} 
-      />
+      <SupplierDrawer isOpen={isSupplierOpen} onClose={() => setIsSupplierOpen(false)} rfc={selectedSupplierRfc} onEdit={() => { setIsSupplierOpen(false); openSupplierEdit(selectedSupplierRfc); }} />
+      <InvoiceDrawer isOpen={isInvoiceOpen} onClose={() => setIsInvoiceOpen(false)} invoice={selectedInvoice} />
 
-      <InvoiceDrawer 
-        isOpen={isInvoiceOpen}
-        onClose={() => setIsInvoiceOpen(false)}
-        invoice={selectedInvoice}
-      />
-
+      {/* Import Preview Modal */}
       <Modal isOpen={previewOpen} onClose={cancelImport} title="Vista previa de importación" width="450px">
         {previewData && (
           <div className="flex flex-col gap-4">
@@ -331,7 +439,6 @@ export default function Administration() {
                 {previewData.pdf && <div className="text-xs text-mt-text-secondary">PDF Adjunto: {previewData.pdf}</div>}
               </div>
             </div>
-            
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-mt-surface p-3 rounded-lg border border-mt-border">
                 <div className="text-[11px] text-mt-text-secondary mb-1">Período / Fecha</div>
@@ -342,14 +449,12 @@ export default function Administration() {
                 <div className="text-sm font-medium text-mt-text-primary">{previewData.records} detectados</div>
               </div>
             </div>
-
             <div className="bg-mt-surface p-4 rounded-lg border border-mt-border text-center">
               <div className="text-xs text-mt-text-secondary mb-1">Total reconocido</div>
               <div className={`text-2xl font-bold ${previewData.type === 'ingresos' ? 'text-emerald-400' : 'text-blue-400'}`}>
                 {formatCurrency(previewData.amount)}
               </div>
             </div>
-
             <div className="flex gap-3 mt-4">
               <Button variant="ghost" size="md" onClick={cancelImport} className="flex-1">Cancelar</Button>
               <Button variant="primary" size="md" onClick={confirmImport} className="flex-1 gap-2">
@@ -359,6 +464,92 @@ export default function Administration() {
           </div>
         )}
       </Modal>
+
+      {/* Payment Modal */}
+      <Modal isOpen={paymentModalOpen} onClose={() => setPaymentModalOpen(false)} title="Agregar Pago" width="450px">
+        {(() => {
+          const inv = expenses.find(e => e.id === paymentInvoiceId);
+          if (!inv) return null;
+          const pagado = inv.payments?.reduce((acc, p) => acc + p.amount, 0) || 0;
+          const pendiente = inv.total - pagado;
+          return (
+            <div className="flex flex-col gap-4">
+              <div className="bg-mt-surface-subtle p-3 rounded-lg border border-mt-border">
+                <div className="text-sm font-semibold text-mt-text-primary">{inv.supplierName}</div>
+                <div className="flex justify-between text-xs text-mt-text-secondary mt-1">
+                  <span>Total: {formatCurrency(inv.total)}</span>
+                  <span>Pagado: <span className="text-emerald-400">{formatCurrency(pagado)}</span></span>
+                  <span>Pendiente: <span className="text-amber-400">{formatCurrency(pendiente)}</span></span>
+                </div>
+              </div>
+              
+              {inv.payments && inv.payments.length > 0 && (
+                <div className="border border-mt-border rounded-lg bg-mt-surface-subtle overflow-hidden">
+                  <div className="text-xs font-semibold px-3 py-2 border-b border-mt-border bg-mt-surface">Pagos Anteriores</div>
+                  {inv.payments.map(p => (
+                    <div key={p.id} className="flex justify-between px-3 py-2 text-[13px] border-b border-mt-border last:border-none">
+                      <span className="text-mt-text-secondary">{formatDateHuman(p.date)} {p.reference && <span className="text-xs opacity-50">({p.reference})</span>}</span>
+                      <span className="font-semibold text-emerald-400">{formatCurrency(p.amount)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[13px] text-mt-text-primary mb-1.5 font-medium">Monto a pagar</label>
+                  <Input type="number" value={paymentAmount} onChange={e => setPaymentAmount(Number(e.target.value))} min={0.01} max={pendiente} step={0.01} />
+                </div>
+                <div>
+                  <label className="block text-[13px] text-mt-text-primary mb-1.5 font-medium">Fecha</label>
+                  <Input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[13px] text-mt-text-primary mb-1.5 font-medium">Referencia (Opcional)</label>
+                <Input type="text" value={paymentReference} onChange={e => setPaymentReference(e.target.value)} placeholder="Ej. Transf 1234" />
+              </div>
+              <div className="flex gap-3 mt-2">
+                <Button variant="ghost" size="md" onClick={() => setPaymentModalOpen(false)} className="flex-1">Cancelar</Button>
+                <Button variant="primary" size="md" onClick={savePayment} disabled={paymentAmount <= 0 || paymentAmount > pendiente} className="flex-1 gap-2">
+                  <CheckCircle size={16} /> Guardar
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
+      </Modal>
+
+      {/* Supplier Edit Modal */}
+      <Modal isOpen={supplierEditOpen} onClose={() => setSupplierEditOpen(false)} title="Editar proveedor" width="420px">
+        <div className="flex flex-col gap-4">
+          <div>
+            <label className="block text-[13px] text-mt-text-primary mb-1.5 font-medium">Contacto</label>
+            <Input type="text" value={editContactName} onChange={e => setEditContactName(e.target.value)} placeholder="Nombre del contacto" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[13px] text-mt-text-primary mb-1.5 font-medium">Teléfono</label>
+              <Input type="text" value={editPhone} onChange={e => setEditPhone(e.target.value)} placeholder="Tel." />
+            </div>
+            <div>
+              <label className="block text-[13px] text-mt-text-primary mb-1.5 font-medium">Correo</label>
+              <Input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} placeholder="Email" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[13px] text-mt-text-primary mb-1.5 font-medium">Tiempo de entrega (días)</label>
+            <Input type="number" value={editLeadTime} onChange={e => setEditLeadTime(Number(e.target.value))} min={0} />
+          </div>
+          <div className="flex gap-3 mt-2">
+            <Button variant="ghost" size="md" onClick={() => setSupplierEditOpen(false)} className="flex-1">Cancelar</Button>
+            <Button variant="primary" size="md" onClick={saveSupplierEdit} className="flex-1 gap-2">
+              <CheckCircle size={16} /> Guardar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+      <IncomeDrawer isOpen={isIncomeOpen} onClose={() => setIsIncomeOpen(false)} income={selectedIncome} />
     </div>
   );
 }

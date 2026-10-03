@@ -8,4 +8,5 @@ export interface Supplier {
   whatsappUrl?: string;
   notes?: string;
   isMock?: boolean;
+  leadTimeDays?: number;
 }
