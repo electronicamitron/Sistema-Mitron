@@ -21,3 +21,5 @@ build/
 
 # Planos
 docs/referencias/plano-local-planta-baja.png
+
+.vercel/
